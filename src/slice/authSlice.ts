@@ -1,13 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { LoginResponse, User } from '../types/types';
+import { LoginResponse } from '../types/types';
 
-// Load initial state from localStorage
 const loadInitialState = () => {
   if (typeof window !== 'undefined') {
     const storedData = localStorage.getItem('auth');
-    return storedData ? JSON.parse(storedData) : { user: null, token: null };
+    return storedData ? JSON.parse(storedData) : null;
   }
-  return { user: null, token: null };
+  return null;
 };
 
 const authSlice = createSlice({
@@ -15,14 +14,13 @@ const authSlice = createSlice({
   initialState: loadInitialState(),
   reducers: {
     setCredentials: (state, action: PayloadAction<LoginResponse>) => {
-      state.user = action.payload.user;
-      state.token = action.payload.token;
-      localStorage.setItem('auth', JSON.stringify(state));
+      const authData = action.payload;
+      localStorage.setItem('auth', JSON.stringify(authData));
+      return authData; 
     },
-    logout: (state) => {
-      state.user = null;
-      state.token = null;
+    logout: () => {
       localStorage.removeItem('auth');
+      return null;
     },
   },
 });
@@ -31,5 +29,5 @@ export const { setCredentials, logout } = authSlice.actions;
 export default authSlice.reducer;
 
 // Selectors
-export const selectCurrentUser = (state: { auth: { user: User } }) => state.auth.user;
-export const selectCurrentToken = (state: { auth: { token: string } }) => state.auth.token;
+export const selectCurrentUser = (state: { auth: LoginResponse }) => state.auth?.user;
+export const selectCurrentToken = (state: { auth: LoginResponse }) => state.auth?.accessToken || state.auth?.user?.authToken;
