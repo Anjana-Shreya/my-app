@@ -12,7 +12,7 @@ import { DashboardTemplate } from '../types/types';
 interface DashboardProps {
   // From mapStateToProps
   searchTerm: string;
-  selectedOption: string;
+  selectedOption: string; 
   filteredTemplates: DashboardTemplate[];
   auth: any;
   templatesData: {
