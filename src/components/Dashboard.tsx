@@ -10,9 +10,8 @@ import './dashboard.css';
 import { DashboardTemplate } from '../types/types';
 
 interface DashboardProps {
-  // From mapStateToProps
   searchTerm: string;
-  selectedOption: string; 
+  selectedOption: string;
   filteredTemplates: DashboardTemplate[];
   auth: any;
   templatesData: {
@@ -20,42 +19,155 @@ interface DashboardProps {
     isLoading: boolean;
     error?: any;
   };
-  
-  // From mapDispatchToProps
+  dashboardsData: {
+    data?: any[];
+    isLoading: boolean;
+    error?: any;
+  };
+
   setSearchTerm: (term: string) => void;
   setSelectedOption: (option: string) => void;
   filterTemplates: (templates: DashboardTemplate[]) => void;
   logout: () => void;
   getOrgTemplates: (orgId: number) => void;
-  
-  // From withRouter
+  getOrgDashboards: (params: { orgId: number, userId: number }) => void;
+
   history: any;
 }
 
 class Dashboard extends Component<DashboardProps> {
   componentDidMount() {
-    const { auth, getOrgTemplates } = this.props;
+    const { auth, getOrgTemplates, getOrgDashboards } = this.props;
     const orgId = auth?.user?.organization?.id;
+    const userId = auth?.user?.id;
+    
+    
     if (orgId) {
       getOrgTemplates(orgId);
+      if (userId) {
+        getOrgDashboards({ orgId, userId });
+      }
     }
   }
 
-componentDidUpdate(prevProps: DashboardProps) {
-  const { templatesData, filterTemplates, searchTerm } = this.props;
-
-  const templatesChanged = templatesData.data !== prevProps.templatesData.data;
-  const searchTermChanged = searchTerm !== prevProps.searchTerm;
-
-  if (templatesData.data && (templatesChanged || searchTermChanged)) {
-    filterTemplates(templatesData.data);
+// In your Dashboard.tsx component
+handleTemplateClick = (item: any) => {
+  // Save the dashboard data to localStorage for easy access in detail view
+  const savedDashboards = JSON.parse(localStorage.getItem('dashboards') || '[]');
+  const parsedDashboards = Array.isArray(savedDashboards) ? savedDashboards : [];
+  
+  // Update or add the current dashboard
+  const existingIndex = parsedDashboards.findIndex(d => d.id === item.id);
+  if (existingIndex >= 0) {
+    parsedDashboards[existingIndex] = item;
+  } else {
+    parsedDashboards.push(item);
   }
+  
+  localStorage.setItem('dashboards', JSON.stringify(parsedDashboards));
+  
+  // Navigate to detail view
+  this.props.history.push(`/dashboard/${item.id}`);
+};
 
-  if (templatesData.error && templatesData.error.status === 401) {
-    this.handleLogout();
+  // In Dashboard.tsx
+  handleToggleFavorite = (e: React.MouseEvent, item: any) => {
+    e.stopPropagation();
+    
+    try {
+      const favorites = JSON.parse(localStorage.getItem('dashboardFavorites') || '{}');
+      const parsedFavorites = typeof favorites === 'string' ? JSON.parse(favorites) : favorites;
+      
+      const newFavoriteStatus = !parsedFavorites[item.id];
+      parsedFavorites[item.id] = newFavoriteStatus;
+      
+      localStorage.setItem('dashboardFavorites', JSON.stringify(parsedFavorites));
+      
+      const updatedItems = this.props.filteredTemplates.map(d => 
+        d.id === item.id ? { ...d, isFavorite: newFavoriteStatus } : d
+      );
+      
+      this.props.filterTemplates(updatedItems);
+    } catch (error) {
+      console.error('Error updating favorites:', error);
+    }
+  };
+
+  componentDidUpdate(prevProps: DashboardProps) {
+    const { templatesData, dashboardsData, filterTemplates, searchTerm, selectedOption } = this.props;
+
+    const templatesChanged = templatesData.data !== prevProps.templatesData.data;
+    const dashboardsChanged = dashboardsData.data !== prevProps.dashboardsData.data;
+    const searchChanged = searchTerm !== prevProps.searchTerm;
+    const optionChanged = selectedOption !== prevProps.selectedOption;
+
+    const shouldUpdate = templatesChanged || dashboardsChanged || searchChanged || optionChanged;
+
+    if (!shouldUpdate) return;
+
+    // Get favorites from localStorage
+    const favorites = JSON.parse(localStorage.getItem('dashboardFavorites') || '{}');
+
+    let filtered: DashboardTemplate[] = [];
+
+    if (selectedOption === 'Templates' && templatesData.data) {
+      filtered = templatesData.data.map(template => ({
+        ...template,
+        isFavorite: !!favorites[template.id]
+      })).filter((template) =>
+        template.templateName?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    else if (['Public Board', 'Private Boards', 'Favorites'].includes(selectedOption) && dashboardsData.data) {
+      let boardFilter = dashboardsData.data.map(dashboard => ({
+        ...dashboard,
+        isFavorite: !!favorites[dashboard.id]
+      }));
+
+      if (selectedOption === 'Public Board') {
+        boardFilter = boardFilter.filter((dashboard: any) => dashboard.type === 'public');
+      } else if (selectedOption === 'Private Boards') {
+        boardFilter = boardFilter.filter((dashboard: any) => dashboard.type !== 'public'); 
+      } else if (selectedOption === 'Favorites') {
+        boardFilter = boardFilter.filter((dashboard: any) => dashboard.isFavorite === true);
+      }
+
+      filtered = boardFilter.filter((dashboard: any) =>
+        (dashboard.dashboardName || dashboard.name || '')
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      );
+    }
+    else if (selectedOption === 'All Boards') {
+      const all = [
+        ...(templatesData.data?.map(template => ({
+          ...template,
+          isFavorite: !!favorites[template.id]
+        })) || []),
+        ...(dashboardsData.data?.map(dashboard => ({
+          ...dashboard,
+          isFavorite: !!favorites[dashboard.id]
+        })) || [])
+      ];
+
+      filtered = all.filter((item) =>
+        (item.templateName || item.dashboardName || item.name || '')
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Sort favorites to the top when not in Favorites view
+    if (selectedOption !== 'Favorites') {
+      filtered.sort((a, b) => {
+        if (a.isFavorite && !b.isFavorite) return -1;
+        if (!a.isFavorite && b.isFavorite) return 1;
+        return 0;
+      });
+    }
+
+    filterTemplates(filtered);
   }
-}
-
 
   handleLogout = () => {
     this.props.logout();
@@ -63,10 +175,15 @@ componentDidUpdate(prevProps: DashboardProps) {
   };
 
   handleRetry = () => {
-    const { auth, getOrgTemplates } = this.props;
+    const { auth, getOrgTemplates, getOrgDashboards } = this.props;
     const orgId = auth?.user?.organization?.id;
+    const userId = auth?.user?.id;
+    
     if (orgId) {
       getOrgTemplates(orgId);
+      if (userId) {
+        getOrgDashboards({ orgId, userId });
+      }
     }
   };
 
@@ -76,9 +193,14 @@ componentDidUpdate(prevProps: DashboardProps) {
       selectedOption,
       filteredTemplates,
       templatesData,
+      dashboardsData,
       setSearchTerm,
       setSelectedOption
     } = this.props;
+
+    const allItems = filteredTemplates || [];
+    const isLoading = templatesData.isLoading || dashboardsData.isLoading;
+    const error = templatesData.error || dashboardsData.error;
 
     return (
       <div className="dashboard-container">
@@ -108,11 +230,11 @@ componentDidUpdate(prevProps: DashboardProps) {
             </select>
           </div>
 
-          {templatesData.isLoading && <p className="status-text">Loading templates...</p>}
+          {isLoading && <p className="status-text">Loading data...</p>}
           
-          {templatesData.error && (
+          {error && (
             <div className="status-text error-text">
-              Error loading templates
+              Error loading data
               <button onClick={this.handleRetry} className="retry-button">
                 Retry
               </button>
@@ -120,41 +242,62 @@ componentDidUpdate(prevProps: DashboardProps) {
           )}
 
           <div className="template-list">
-            {filteredTemplates.length > 0 ? (
-              filteredTemplates.map((template) => (
-                <div key={template.id} className="template-row">
+            {allItems.length > 0 ? (
+              allItems.map((item) => (
+                <div 
+                  key={item.id} 
+                  className="template-row"
+                  onClick={() => this.handleTemplateClick(item)}
+                  style={{ cursor: 'pointer' }}
+                > 
                   <div className="left-section">
                     <div className="template-icon">▦</div>
                     <div className="template-info">
-                      <div className="template-name">{template.templateName || 'Untitled'}</div>
+                      <div className="template-name">
+                        {item.templateName || item.dashboardName || item.name || 'Untitled'}
+                      </div>
+                      <div className="template-description">
+                        {item.description || ''}
+                      </div>
                     </div>
                   </div>
                   <div className="middle-section">
-                    {template.metricsList?.slice(0, 3).map((metric) => (
-                      <span key={metric.id} className="metric-pill">
-                        {metric.metricName}
+                    {(Array.isArray(item.metricsList || item.widgets || item.metrics) 
+                      ? (item.metricsList || item.widgets || item.metrics) 
+                      : []).slice(0, 3).map((metric: any, index: number) => (
+                      <span key={metric?.id || index} className="metric-pill">
+                        {metric?.metricName || metric?.widgetType || metric?.name || 'Metric'}
                       </span>
                     ))}
-                    {template.metricsList && template.metricsList.length > 3 && (
-                      <span className="metric-pill">+{template.metricsList.length - 3}</span>
+                    {Array.isArray(item.metricsList || item.widgets || item.metrics) && 
+                    (item.metricsList || item.widgets || item.metrics).length > 3 && (
+                      <span className="metric-pill">
+                        +{(item.metricsList || item.widgets || item.metrics).length - 3}
+                      </span>
                     )}
                   </div>
                   <div className="right-section">
-                    <div className="circle-avatar">H</div>
-                    <span className="icon-btn">☆</span>
+                    <div className="circle-avatar">
+                      {item.owner?.charAt(0) || 'U'}
+                    </div>
+                    <span 
+                      className={`icon-btn ${item.isFavorite ? 'favorite-active' : ''}`}
+                      onClick={(e) => this.handleToggleFavorite(e, item)}
+                    >
+                      {item.isFavorite ? '★' : '☆'}
+                    </span>
                     <span className="icon-btn">↗</span>
                   </div>
                 </div>
               ))
             ) : (
               <div className="no-data-card">
-                {templatesData.data?.length === 0
-                  ? 'No templates found'
-                  : 'No matching templates found'}
+                {!isLoading && templatesData.data?.length === 0 && dashboardsData.data?.length === 0
+                  ? 'No data found'
+                  : 'No matching items found'}
               </div>
             )}
           </div>
-            
 
           <button onClick={this.handleLogout} className="logout-button" style={{marginBottom:"20px"}}>
             Logout
@@ -170,7 +313,11 @@ const mapStateToProps = (state: any) => ({
   selectedOption: state.templates.selectedOption,
   filteredTemplates: state.templates.filteredTemplates,
   auth: state.auth,
-  templatesData: dashboardApi.endpoints.getOrgTemplates.select(state.auth?.user?.organization?.id)(state)
+  templatesData: dashboardApi.endpoints.getOrgTemplates.select(state.auth?.user?.organization?.id)(state),
+  dashboardsData: dashboardApi.endpoints.getUserDashboards.select({
+    orgId: state.auth?.user?.organization?.id,
+    userId: state.auth?.user?.id
+  })(state)
 });
 
 const mapDispatchToProps = {
@@ -178,7 +325,8 @@ const mapDispatchToProps = {
   setSelectedOption,
   filterTemplates,
   logout,
-  getOrgTemplates: dashboardApi.endpoints.getOrgTemplates.initiate
+  getOrgTemplates: dashboardApi.endpoints.getOrgTemplates.initiate,
+  getOrgDashboards: dashboardApi.endpoints.getUserDashboards.initiate
 };
 
 const DashboardWithRouter = (props: any) => {

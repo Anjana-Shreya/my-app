@@ -31,11 +31,20 @@ export const dashboardApi = createApi({
       return headers;
     }
   }),
-  tagTypes: ['Templates'],
+  tagTypes: ['Dashboards'],
   endpoints: (builder) => ({
     getOrgTemplates: builder.query<DashboardTemplate[], number>({
       query: (orgId) => `/dashboards/templates/org/${orgId}`,
-      providesTags: ['Templates'],
+      providesTags: ['Dashboards'],
+      transformResponse: (response: any) => {
+        if (Array.isArray(response)) return response;
+        if (response?.data) return response.data;
+        return [];
+      }
+    }),
+    getUserDashboards: builder.query<any, { orgId: number, userId: number }>({
+      query: ({ orgId, userId }) => `/dashboards/${orgId}/user/${userId}`,
+      providesTags: ['Dashboards'],
       transformResponse: (response: any) => {
         if (Array.isArray(response)) return response;
         if (response?.data) return response.data;
@@ -45,4 +54,7 @@ export const dashboardApi = createApi({
   }),
 });
 
-export const { useGetOrgTemplatesQuery } = dashboardApi;
+export const { 
+  useGetOrgTemplatesQuery, 
+  useGetUserDashboardsQuery 
+} = dashboardApi;

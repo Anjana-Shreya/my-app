@@ -24,23 +24,11 @@ const Sidebar = () => {
           {openDropdown === 'workflow' && (
             <div className="sidebar-submenu">
               <NavLink to="/process" className="sidebar-sublink">Process</NavLink>
-              <NavLink to="/steps" className="sidebar-sublink">Steps</NavLink>
             </div>
           )}
         </div>
 
-        <div className="sidebar-group">
-          <div className="sidebar-link" onClick={() => toggleDropdown('settings')}>
-            Settings
-            <span className="arrow">{openDropdown === 'settings' ? '▾' : '▸'}</span>
-          </div>
-          {openDropdown === 'settings' && (
-            <div className="sidebar-submenu">
-              <NavLink to="/profile" className="sidebar-sublink">Profile</NavLink>
-              <NavLink to="/preferences" className="sidebar-sublink">Preferences</NavLink>
-            </div>
-          )}
-        </div>
+        <NavLink to="/settings" className="sidebar-link">Settings</NavLink>
       </nav>
     </aside>
   );

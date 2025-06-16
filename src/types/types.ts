@@ -45,6 +45,14 @@ export interface DashboardTemplate {
   templateName: string;
   templateDescription: string | null;
   metricsList: Metric[];
+  isPublic?: boolean;
+  isFavorite?: boolean;
+  dashboardName?: string;
+  name?: string;
+  description?: string;
+  widgets?: any[];
+  metrics?: any[];
+  owner?: string;
 }
 
 export type Dashboard = {
@@ -60,3 +68,31 @@ export type Dashboard = {
     metricsList: Metric[];
     type: string;
 }
+
+export type Team = {
+  id: number,
+  name: string
+}
+
+export interface Author {
+  id: number;
+  name: string;
+}
+
+export interface GitRepo {
+  name: string;
+  branches: string[];
+}
+
+export interface SelectOption {
+  value: number | string;
+  label: string;
+}
+
+export type ProcessPoint = {
+  period: string; // e.g. "05/05"
+  codingTime: number;     // in seconds
+  reviewedTime: number;
+  deployTime: number;
+  cycleTime: number;
+};

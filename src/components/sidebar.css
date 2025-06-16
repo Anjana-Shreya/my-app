@@ -13,6 +13,7 @@
   font-family: 'Inter', sans-serif;
   box-shadow: 6px 0 24px rgba(0, 0, 0, 0.5);
   border-right: 1px solid #2c2c3e;
+  position: fixed;
 }
 
 .sidebar-header {
@@ -44,7 +45,7 @@
 .sidebar-link:hover,
 .sidebar-link.active {
   color: #00aaff;
-  transform: translateX(4px);
+  /* transform: translateX(4px); */
 }
 
 .sidebar-group {

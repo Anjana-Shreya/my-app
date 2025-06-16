@@ -4,18 +4,27 @@ import { api } from '../slice/apiSlice';
 import { dashboardApi } from '../slice/dashboardApiSlice';
 import authReducer from '../slice/authSlice';
 import templatesReducer from '../slice/templateSlice';
+import { teamApi } from '../slice/teamApiSlice';
+import { metricsApi } from '../slice/metricsApiSlice';
+import { processApiSlice } from '../slice/processApiSlice';
 
 export const store = configureStore({
   reducer: {
     [api.reducerPath]: api.reducer,
     [dashboardApi.reducerPath]: dashboardApi.reducer,
+    [teamApi.reducerPath]: teamApi.reducer,
+    [metricsApi.reducerPath]: metricsApi.reducer,
+    [processApiSlice.reducerPath]: processApiSlice.reducer,
     auth: authReducer,
     templates: templatesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(api.middleware)
-      .concat(dashboardApi.middleware),
+      .concat(dashboardApi.middleware)
+      .concat(teamApi.middleware)
+      .concat(metricsApi.middleware)
+      .concat(processApiSlice.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
 import Process from './components/Process';
+import DashboardDetail from './components/DashboardDetail';
 
 const App: React.FC = () => {
   return (
@@ -19,6 +20,10 @@ const App: React.FC = () => {
         <Route path="/process" element={
           <Process />
         } />
+        <Route path="/dashboard/:id" element={
+          <DashboardDetail />} 
+        />
+
         
         <Route path="*" element={<div>404 Not Found</div>} />
       </Routes>

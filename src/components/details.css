@@ -1,0 +1,61 @@
+/* Add to your dashboard.css */
+.dashboard-detail {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-detail h1 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.description {
+  color: #666;
+  margin-bottom: 30px;
+  font-style: italic;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.metric-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.metric-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.metric-card h3 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.metric-card p {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.dashboard-not-found {
+  text-align: center;
+  padding: 40px;
+}
+
+.dashboard-not-found button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 20px;
+}
