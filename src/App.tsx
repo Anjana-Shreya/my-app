@@ -5,6 +5,7 @@ import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
 import Process from './components/Process';
 import DashboardDetail from './components/DashboardDetail';
+import MetricDetails from './components/MetricDetails';
 
 const App: React.FC = () => {
   return (
@@ -22,6 +23,9 @@ const App: React.FC = () => {
         } />
         <Route path="/dashboard/:id" element={
           <DashboardDetail />} 
+        />
+        <Route path="/metric-details" element={
+          <MetricDetails />} 
         />
 
         

@@ -1,4 +1,4 @@
-// src/slices/dashboardApiSlice.ts
+// src/slice/dashboardApiSlice.ts
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { DashboardTemplate } from '../types/types';
 
@@ -8,13 +8,34 @@ interface GraphRequestParams {
   organizationId: number;
   startDate: number; // Unix timestamp
   endDate: number;   // Unix timestamp
-  filterType: 'daily' | 'weekly' | 'monthly' | 'quarterly';
+  filterType: 'daily' | 'weekly' | 'monthly';
   teamIds: number[];
   projectIds: number[];
   advancedFilters: Record<string, any>;
 }
 
-interface GraphResponse {
+interface MetricSummaryResponse {
+  benchmarkInfo: {
+    High: string;
+    Low: string;
+    Medium: string;
+    Elite: string;
+  };
+  CockpitGraphData: {
+    percentage: number;
+    weekNo: number;
+    formattedDate: string;
+    totalMetricCount: number;
+    totalCount: number;
+  }[];
+  benchMarkResult: string;
+  changePercentage: string | number;
+  primaryValue: number;
+}
+
+interface TeamMetricResponse {
+  // Define the response structure for the /overview/v2/team/metric endpoint
+  // Adjust based on actual API response
   data: {
     categories: string[];
     series: {
@@ -58,7 +79,7 @@ export const dashboardApi = createApi({
       return headers;
     }
   }),
-  tagTypes: ['Dashboards', 'MetricData'],
+  tagTypes: ['Dashboards', 'MetricData', 'MetricDetails', 'TeamMetrics'],
   endpoints: (builder) => ({
     // Existing endpoints...
     getOrgTemplates: builder.query<DashboardTemplate[], number>({
@@ -71,19 +92,62 @@ export const dashboardApi = createApi({
       providesTags: ['Dashboards']
     }),
     
-    getMetricGraphData: builder.query<any, { metricKey: string; params: any }>({
-    query: ({ metricKey, params }) => ({
-      url: `/graph/${metricKey}`,
-      method: 'POST',
-      body: params
+    getMetricGraphData: builder.query<MetricSummaryResponse, { metricKey: string; params: GraphRequestParams }>({
+      query: ({ metricKey, params }) => ({
+        url: `/graph/${metricKey}`,
+        method: 'POST',
+        body: params
+      }),
+      providesTags: (result, error, { metricKey }) => [{ type: 'MetricData', id: metricKey }]
     }),
-    providesTags: (result, error, { metricKey }) => [{ type: 'MetricData', id: metricKey }]
-  }),
+
+    // New endpoint for /overview/v2/team/metric
+    getTeamMetrics: builder.query<TeamMetricResponse, GraphRequestParams & { metricType: string }>({
+      query: (params) => ({
+        url: '/overview/v2/team/metric',
+        method: 'POST',
+        body: {
+          startDate: params.startDate,
+          endDate: params.endDate,
+          metricType: params.metricType,
+          mainTeamMetric: true,
+          teamIds: params.teamIds,
+          organizationId: params.organizationId,
+          authorIds: [],
+          groupBy: params.filterType,
+          projectIds: params.projectIds,
+          advancedFilters: params.advancedFilters,
+          signal: {}
+        }
+      }),
+      providesTags: (result, error, params) => [{ type: 'TeamMetrics', id: params.metricType }]
+    }),
+
+    getMetricDetails: builder.query<MetricSummaryResponse, GraphRequestParams & { metricType: string }>({
+      query: (params) => ({
+        url: '/overview/v2/team/metric-summary',
+        method: 'POST',
+        body: params
+      }),
+      providesTags: (result, error, params) => [{ type: 'MetricDetails', id: params.metricType }]
+    }),
+
+    getBenchmarkData: builder.query<any, { metricType: string; teamIds: number[] }>({
+      query: ({ metricType, teamIds }) => ({
+        url: '/benchmark/data',
+        method: 'POST',
+        body: { metricType, teamIds }
+      }),
+      providesTags: ['MetricData']
+    })
   }),
 });
 
 export const { 
   useGetOrgTemplatesQuery, 
   useGetUserDashboardsQuery,
-  useGetMetricGraphDataQuery
+  useGetMetricGraphDataQuery,
+  useGetTeamMetricsQuery,
+  useGetMetricDetailsQuery,
+  useGetBenchmarkDataQuery
 } = dashboardApi;

@@ -1,206 +1,120 @@
 /* src/components/details.css */
+
 .dashboard-container {
   display: flex;
   min-height: 100vh;
+  background-color: #f8fafc;
 }
 
 .dashboard-content {
   flex: 1;
-  padding: 20px;
-  margin-left: 250px; 
-}
-
-.filters-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 30px;
-  padding: 15px;
-  background: #f5f5f5;
-  border-radius: 8px;
-}
-
-.filter-group {
-  flex: 1;
-  min-width: 250px;
-  background: white;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.filter-label {
-  font-weight: 500;
-  margin-bottom: 10px;
-  display: block;
-}
-
-.date-range-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.date-picker {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  width: 120px;
-}
-
-.date-range-separator {
-  color: #666;
-}
-
-.dropdown-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  padding: 8px 0;
-}
-
-.checkbox-group-container {
-  margin-top: 10px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.checkbox-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.dashboard-detail {
-  margin-top: 20px;
+  padding: 2rem;
+  margin-left: 240px; /* Adjust based on your sidebar width */
+  transition: margin-left 0.3s ease;
 }
 
 .dashboard-title {
-  margin-bottom: 10px;
+  color: #1e293b;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
 }
 
 .dashboard-description {
-  color: #666;
-  margin-bottom: 20px;
-}
-
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.metric-card {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.metric-title {
-  margin-bottom: 10px;
-}
-
-.metric-description {
-  color: #666;
-}
-
-.dashboard-not-found {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  text-align: center;
-}
-
-/* src/components/details.css */
-.dashboard-container {
-  display: flex;
-  min-height: 100vh;
-}
-
-.dashboard-content {
-  flex: 1;
-  padding: 20px;
-  background-color: #f5f7fa;
+  color: #64748b;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
 }
 
 .filters-section {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 20px;
-  padding: 15px;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
   background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .filter-group {
+  flex: 1;
   min-width: 250px;
 }
 
 .filter-label {
   font-weight: 600;
-  margin-bottom: 8px;
+  color: #334155;
+  margin-bottom: 0.5rem;
   display: block;
 }
 
 .date-range-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.75rem;
 }
 
 .date-picker {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  width: 120px;
+  transition: border-color 0.2s ease;
+}
+
+.date-picker:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
 .date-range-separator {
-  color: #666;
+  color: #64748b;
+  font-size: 0.875rem;
 }
 
 .granularity-select {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
   width: 100%;
+  background-color: white;
+  transition: border-color 0.2s ease;
+}
+
+.granularity-select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
 .dropdown-header {
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .checkbox-group-container {
   max-height: 300px;
   overflow-y: auto;
-  padding: 10px;
-  border: 1px solid #eee;
-  border-radius: 4px;
-  margin-top: 8px;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
 }
 
 .checkbox-group {
   display: flex;
   flex-direction: column;
-}
-
-.dashboard-title {
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.dashboard-description {
-  color: #666;
-  margin-bottom: 20px;
+  gap: 0.5rem;
 }
 
 .dashboard-not-found {
@@ -210,15 +124,98 @@
   justify-content: center;
   height: 100vh;
   text-align: center;
+  padding: 2rem;
+}
+
+.dashboard-not-found h2 {
+  color: #1e293b;
+  margin-bottom: 1.5rem;
+}
+
+/* Scrollbar styling */
+.checkbox-group-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.checkbox-group-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.checkbox-group-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.checkbox-group-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animation for dropdown */
+.MuiCollapse-wrapperInner {
+  transition: all 0.3s ease;
+}
+
+/* Checkbox styling */
+.MuiCheckbox-root {
+  color: #94a3b8 !important;
+}
+
+.MuiCheckbox-root.Mui-checked {
+  color: #6366f1 !important;
+}
+
+.MuiFormControlLabel-label {
+  font-size: 0.875rem;
+  color: #334155;
+}
+
+/* Icon button styling */
+.MuiIconButton-root {
+  padding: 4px !important;
+  color: #64748b !important;
+}
+
+.MuiIconButton-root:hover {
+  background-color: rgba(99, 102, 241, 0.1) !important;
+}
+
+/* Grid item styling */
+.MuiGrid-item {
+  padding: 1rem !important;
+}
+
+/* Paper component styling */
+.MuiPaper-root {
+  border-radius: 0.75rem !important;
+  overflow: hidden;
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+  .dashboard-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+  
   .filters-section {
     flex-direction: column;
+    gap: 1rem;
   }
   
   .filter-group {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .date-range-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .date-picker {
     width: 100%;
   }
 }

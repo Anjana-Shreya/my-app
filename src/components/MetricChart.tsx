@@ -4,6 +4,7 @@ import { useGetMetricGraphDataQuery } from '../slice/dashboardApiSlice';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { Box, CircularProgress, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 interface MetricChartProps {
   metricKey: string;
@@ -30,7 +31,7 @@ interface GraphResponse {
   CockpitGraphData: CockpitGraphData[];
   benchMarkResult: string;
   changePercentage: string;
-  value: number;
+  primaryValue: number;
 }
 
 const MetricChart: React.FC<MetricChartProps> = ({ 
@@ -39,6 +40,8 @@ const MetricChart: React.FC<MetricChartProps> = ({
   metricDescription,
   yaxisSuffix 
 }) => {
+  const navigate = useNavigate();
+  
   // Get filter values from localStorage
   const startDate = localStorage.getItem('startDate2');
   const endDate = localStorage.getItem('endDate2');
@@ -61,10 +64,40 @@ const MetricChart: React.FC<MetricChartProps> = ({
     }
   });
 
+  const handlePointClick = (event: Highcharts.PointClickEventObject) => {
+    // Prepare the payload to pass to the detail page
+    const payload = {
+      startDate: startDate ? parseInt(startDate) : Math.floor(Date.now() / 1000) - 86400 * 7,
+      endDate: endDate ? parseInt(endDate) : Math.floor(Date.now() / 1000),
+      metricType: metricKey,
+      mainTeamMetric: true,
+      teamIds: selectedTeams,
+      organizationId: authData?.user?.organization?.id || 0,
+      authorIds: [],
+      groupBy: filterType,
+      projectIds: [],
+      advancedFilters: {},
+      signal: {},
+      // Add any additional data you want to pass
+      pointData: event.point.options
+    };
+
+    // Navigate to detail page with the payload
+    navigate('/metric-details', { state: { payload } });
+  };
+
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="300px">
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="300px">
+        <Typography color="error">Error loading chart data</Typography>
       </Box>
     );
   }
@@ -94,7 +127,12 @@ const MetricChart: React.FC<MetricChartProps> = ({
     chart: {
       type: 'column',
       height: 300,
-      backgroundColor: 'transparent'
+      backgroundColor: 'transparent',
+      events: {
+        click: function(event) {
+          // You can handle chart click here if needed
+        }
+      }
     },
     xAxis: {
       categories: categories,
@@ -118,37 +156,15 @@ const MetricChart: React.FC<MetricChartProps> = ({
         }
       }
     },
-    series: [
-      {
-        name: 'Percentage',
-        type: 'column',
-        data: percentageData,
-        color: '#4285F4',
-        dataLabels: {
-          enabled: true,
-          format: yaxisSuffix ? `{point.y} ${yaxisSuffix}` : '{point.y}'
-        }
-      },
-      {
-        name: 'Total Metric Count',
-        type: 'spline',
-        data: totalMetricCountData,
-        color: '#EA4335',
-        marker: {
-          symbol: 'circle'
-        }
-      },
-      {
-        name: 'Total Count',
-        type: 'spline',
-        data: totalCountData,
-        color: '#FBBC05',
-        marker: {
-          symbol: 'circle'
-        }
-      }
-    ],
     plotOptions: {
+      series: {
+        cursor: 'pointer',
+        point: {
+          events: {
+            click: handlePointClick
+          }
+        }
+      },
       column: {
         borderRadius: 3,
         pointPadding: 0.1,
@@ -160,6 +176,51 @@ const MetricChart: React.FC<MetricChartProps> = ({
         }
       }
     },
+    series: [
+      {
+        name: 'Percentage',
+        type: 'column',
+        data: percentageData.map((value, index) => ({
+          y: value,
+          name: categories[index],
+          date: chartData[index].formattedDate,
+          weekNo: chartData[index].weekNo
+        })),
+        color: '#4285F4',
+        dataLabels: {
+          enabled: true,
+          format: yaxisSuffix ? `{point.y} ${yaxisSuffix}` : '{point.y}'
+        }
+      },
+      {
+        name: 'Total Metric Count',
+        type: 'spline',
+        data: totalMetricCountData.map((value, index) => ({
+          y: value,
+          name: categories[index],
+          date: chartData[index].formattedDate,
+          weekNo: chartData[index].weekNo
+        })),
+        color: '#EA4335',
+        marker: {
+          symbol: 'circle'
+        }
+      },
+      {
+        name: 'Total Count',
+        type: 'spline',
+        data: totalCountData.map((value, index) => ({
+          y: value,
+          name: categories[index],
+          date: chartData[index].formattedDate,
+          weekNo: chartData[index].weekNo
+        })),
+        color: '#FBBC05',
+        marker: {
+          symbol: 'circle'
+        }
+      }
+    ],
     tooltip: {
       shared: true,
       useHTML: true,
