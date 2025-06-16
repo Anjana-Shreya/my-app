@@ -277,9 +277,6 @@ handleTemplateClick = (item: any) => {
                     )}
                   </div>
                   <div className="right-section">
-                    <div className="circle-avatar">
-                      {item.owner?.charAt(0) || 'U'}
-                    </div>
                     <span 
                       className={`icon-btn ${item.isFavorite ? 'favorite-active' : ''}`}
                       onClick={(e) => this.handleToggleFavorite(e, item)}

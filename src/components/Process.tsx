@@ -14,7 +14,6 @@ import './process.css';
 import Graph1 from './Graph1';
 import { Checkbox, FormControlLabel, FormGroup, Box, Typography, Collapse, IconButton } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
-import ProcessMetrics from './ProcessMetrics';
 
 const Process = () => {
   const user = useSelector(selectCurrentUser);
