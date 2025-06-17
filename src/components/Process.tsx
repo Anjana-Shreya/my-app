@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from './Sidebar';
 import { useSelector } from 'react-redux';
 import {
   useGetHierarchicalTeamQuery,
@@ -150,7 +149,6 @@ const Process = () => {
 
   return (
     <div className="process-container">
-      <Sidebar />
       <div className="process-content">
         <h2 className="process-title">Team Authors Report</h2>
 
