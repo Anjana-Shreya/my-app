@@ -19,7 +19,7 @@ import {
 import { useGetMetricDetailsQuery, useGetTeamMetricsQuery } from '../slice/dashboardApiSlice';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import Sidebar from './Sidebar';
+import './metricdetail.css'
 
 interface TeamMetricData {
   teamId: number;
@@ -184,8 +184,7 @@ const MetricDetails = () => {
   });
 
   return (
-		<div>
-			<Sidebar />
+		<div className='metric-container'>
 			<Box p={4}>
 				<Button 
 					variant="outlined" 

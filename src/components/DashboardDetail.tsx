@@ -7,21 +7,9 @@ import { selectCurrentUser } from '../slice/authSlice';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { addDays } from 'date-fns';
-import { 
-  Checkbox, 
-  FormControlLabel, 
-  FormGroup, 
-  Box, 
-  Typography, 
-  Collapse, 
-  IconButton,
-  Button,
-  CircularProgress,
-  Paper
-} from '@mui/material';
+import { Checkbox, FormControlLabel, FormGroup, Box, Typography, Collapse, IconButton, Button, CircularProgress, Paper } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
-import Sidebar from './Sidebar';
 import MetricChart from './MetricChart';
 import "./details.css";
 
@@ -51,6 +39,7 @@ const DashboardDetail = () => {
   const [filterType, setFilterType] = useState<'daily' | 'weekly' | 'monthly'>(
     () => (localStorage.getItem('filterType') as 'daily' | 'weekly' | 'monthly') || 'weekly'
   );
+  const fixedColors = ['#E57373', '#64B5F6', '#81C784', '#FFD54F', '#BA68C8', '#4DB6AC'];
 
   const user = useSelector(selectCurrentUser);
   const userId = user?.id;
@@ -163,11 +152,24 @@ const DashboardDetail = () => {
 
   return (
     <div className="dashboard-container">
-      <Sidebar />
       <div className="dashboard-content">
-        <div className="filters-section">
+        <Button 
+					variant="outlined" 
+					onClick={() => navigate(-1)}
+					sx={{ mb: 2 }}
+				>
+					Back to Dashboard
+				</Button>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h4" className="dashboard-title">
+            {dashboard.templateName}
+          </Typography>
+        </Box>
+
+        {/* Filters Section */}
+        <div className="filters-container">
           {/* Date Range Filter */}
-          <div className="filter-group">
+          <div className="filter-card">
             <Typography variant="subtitle1" className="filter-label">
               Date Range
             </Typography>
@@ -181,7 +183,7 @@ const DashboardDetail = () => {
                 selectsStart
                 startDate={startDate}
                 endDate={endDate}
-                className="date-picker"
+                className="date-picker-input"
                 placeholderText="Start date"
                 dateFormat="dd/MM/yyyy"
               />
@@ -196,7 +198,7 @@ const DashboardDetail = () => {
                 startDate={startDate}
                 endDate={endDate}
                 minDate={startDate ?? undefined}
-                className="date-picker"
+                className="date-picker-input"
                 placeholderText="End date"
                 dateFormat="dd/MM/yyyy"
               />
@@ -204,85 +206,103 @@ const DashboardDetail = () => {
           </div>
 
           {/* Time Granularity Filter */}
-          <div className="filter-group">
+          <div className="filter-card">
             <Typography variant="subtitle1" className="filter-label">
               Time Granularity
             </Typography>
-            <select 
-              value={filterType}
-              onChange={(e) => {
-                const selected = e.target.value as 'daily' | 'weekly' | 'monthly';
-                setFilterType(selected);
-                localStorage.setItem('filterType', selected);
-              }}
-              className="granularity-select"
-            >
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
+            <div className="select-wrapper">
+              <select 
+                value={filterType}
+                onChange={(e) => {
+                  const selected = e.target.value as 'daily' | 'weekly' | 'monthly';
+                  setFilterType(selected);
+                  localStorage.setItem('filterType', selected);
+                }}
+                className="granularity-select"
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
           </div>
 
-          {/* Teams Dropdown with Checkboxes */}
-          <div className="filter-group">
-            <div className="dropdown-header" onClick={() => setOpenTeams(!openTeams)} style={{display:"flex"}}>
+          {/* Teams Filter */}
+          <div className="filter-card teams-filter">
+            <div
+              className="teams-dropdown-header"
+              onClick={() => setOpenTeams(!openTeams)}
+            >
               <Typography variant="subtitle1" className="filter-label">
-                Select Team(s)
+                Teams ({selectedTeams.length})
               </Typography>
               <IconButton size="small">
                 {openTeams ? <ExpandLess /> : <ExpandMore />}
               </IconButton>
             </div>
+
             <Collapse in={openTeams}>
-              <Box className="checkbox-group-container">
+              <Paper className="teams-dropdown-content">
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={teams.length > 0 && selectedTeams.length === teams.length}
-                      indeterminate={teams.length > 0 && selectedTeams.length > 0 && selectedTeams.length < teams.length}
+                      checked={selectedTeams.length === teams.length}
+                      indeterminate={selectedTeams.length > 0 && selectedTeams.length < teams.length}
                       onChange={handleSelectAllTeams}
-                      color="primary"
                     />
                   }
                   label="Select all"
                 />
-                <FormGroup className="checkbox-group">
-                  {teams.map(team => (
-                    <FormControlLabel
-                      key={team.id}
-                      control={
-                        <Checkbox
-                          checked={selectedTeams.includes(team.id)}
-                          onChange={() => handleTeamToggle(team.id)}
-                          color="primary"
-                        />
-                      }
-                      label={team.name}
-                    />
-                  ))}
+                <FormGroup className="teams-list">
+                  {teams.map((team, index) => {
+                    const color = fixedColors[team.id % fixedColors.length]; 
+                    return (
+                      <FormControlLabel
+                        key={team.id}
+                        control={
+                          <Checkbox
+                            checked={selectedTeams.includes(team.id)}
+                            onChange={() => handleTeamToggle(team.id)}
+                          />
+                        }
+                        label={
+                          <div className="team-label">
+                            <div 
+                              className="team-avatar" 
+                              style={{ backgroundColor: color }}
+                            >
+                              {team.name
+                                .split(' ')
+                                .map((word) => word[0])
+                                .join('')
+                                .slice(0, 2)
+                                .toUpperCase()}
+                            </div>
+                            <span className="team-name">{team.name}</span>
+                          </div>
+                        }
+                      />
+                    );
+                  })}
                 </FormGroup>
-              </Box>
+              </Paper>
             </Collapse>
           </div>
         </div>
 
+        {/* Dashboard Content */}
         <div className="dashboard-detail">
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-            <Typography variant="h4" className="dashboard-title">
-              {dashboard.templateName}
-            </Typography>
-          </Box>
-          
           {dashboard.templateDescription && (
-            <Typography variant="body1" className="dashboard-description" mb={3}>
+            <Typography variant="body1" className="dashboard-description">
               {dashboard.templateDescription}
             </Typography>
           )}
           
-          <Grid container spacing={3}>
+          {/* Charts Grid */}
+          <div className="charts-grid">
             {dashboard.metricsList.map((metric) => (
-              <Grid container spacing={2} key={metric.id}>
-                <Paper elevation={2} sx={{ p: 2, height: '100%' }}>
+              <div key={metric.id} className="chart-container">
+                <Paper elevation={2} className="chart-paper">
                   <MetricChart 
                     metricKey={metric.metricKey}
                     metricName={metric.metricName}
@@ -290,9 +310,9 @@ const DashboardDetail = () => {
                     yaxisSuffix={metric.yaxisSuffix}
                   />
                 </Paper>
-              </Grid>
+              </div>
             ))}
-          </Grid>
+          </div>
         </div>
       </div>
     </div>

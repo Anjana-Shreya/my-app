@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { logout } from '../slice/authSlice';
 import { setSearchTerm, setSelectedOption, filterTemplates } from '../slice/templateSlice';
 import { dashboardApi } from '../slice/dashboardApiSlice';
-import Sidebar from './Sidebar';
 import './dashboard.css';
 import { DashboardTemplate } from '../types/types';
 
@@ -204,8 +203,7 @@ handleTemplateClick = (item: any) => {
 
     return (
       <div className="dashboard-container">
-        <Sidebar />
-        <div className="main-content" style={{width:"78vw"}}>
+        <div className="main-content">
           <h1 className="dashboard-title">Dashboard</h1>
 
           <div className="controls">
@@ -283,7 +281,6 @@ handleTemplateClick = (item: any) => {
                     >
                       {item.isFavorite ? '★' : '☆'}
                     </span>
-                    <span className="icon-btn">↗</span>
                   </div>
                 </div>
               ))

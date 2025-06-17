@@ -1,11 +1,8 @@
-// src/App.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginForm from './components/LoginForm';
-import Dashboard from './components/Dashboard';
-import Process from './components/Process';
-import DashboardDetail from './components/DashboardDetail';
-import MetricDetails from './components/MetricDetails';
+import MainLayout from './layout/MainLayout';
+import { Navigate } from 'react-router-dom';
 
 const App: React.FC = () => {
   return (
@@ -13,23 +10,8 @@ const App: React.FC = () => {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LoginForm />} />
-        
-        {/* Protected routes */}
-        <Route path="/dashboard" element={
-          <Dashboard />
-        } />
-        <Route path="/process" element={
-          <Process />
-        } />
-        <Route path="/dashboard/:id" element={
-          <DashboardDetail />} 
-        />
-        <Route path="/metric-details" element={
-          <MetricDetails />} 
-        />
-
-        
-        <Route path="*" element={<div>404 Not Found</div>} />
+        <Route path='/*' element={<MainLayout />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Router>
   );

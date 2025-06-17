@@ -1,176 +1,117 @@
-/* src/components/process.css */
-
-/* Main Container Styles */
+/* Process Container */
 .process-container {
   display: flex;
   min-height: 100vh;
-  background-color: #f5f7fa;
-  width: 100%;
-  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 .process-content {
   flex: 1;
-  padding: 2rem;
-  margin-left: 250px; 
-  max-width: calc(100vw - 250px); 
-  box-sizing: border-box; 
+  padding: 20px;
+  margin-left: 250px; /* Adjust based on your sidebar width */
 }
 
 .process-title {
-  color: #2c3e50;
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e0e0e0;
-  width: 100%;
+  margin-bottom: 24px;
+  color: #333;
 }
 
-/* Filter Controls Section */
+/* Topbar Filters */
 .process-topbar {
   display: flex;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  width: 100%;
-  box-sizing: border-box;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  width: 100%;
-  min-width: 0; /* Prevent flex items from overflowing */
+  position: relative;
+  min-width: 200px;
+  align-items: center;
 }
 
-/* Date Picker Styles */
-.date-range-group {
+.filter-label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: block;
+  color: #333;
+}
+
+/* Dropdown Header */
+.dropdown-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-}
-
-.react-datepicker-wrapper {
-  width: 100% !important;
-}
-
-.date-picker {
-  width: 100%;
-  padding: 0.625rem 0.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  color: #4a5568;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-}
-
-.checkbox-group-container {
-  max-height: 200px;      /* You can adjust this height as needed */
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0.5rem 1rem;
+  justify-content: space-between;
+  padding: 8px 12px;
   border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: #f9f9f9;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: white;
+  min-width: 200px;
+}
+
+.dropdown-header:hover {
+  border-color: #888;
+}
+
+/* Dropdown Content */
+.checkbox-group-container {
+  position: absolute;
+  z-index: 10;
+  width: 100%;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 16px;
+  margin-top: 4px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .checkbox-group {
+  margin-top: 8px;
+}
+
+/* Date Range Picker */
+.date-range-group {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 8px;
 }
 
-/* React Select Customization */
-.select__control {
-  min-height: 40px !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 6px !important;
-  box-shadow: none !important;
-  transition: all 0.2s ease !important;
-  width: 100% !important;
+.date-picker {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 120px;
 }
 
-.select__menu {
-  width: auto !important;
-  min-width: 100% !important;
+.date-range-separator {
+  color: #666;
 }
 
-/* Highcharts Container */
-.metrics-chart-container {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  margin-top: 1rem;
-  transition: all 0.3s ease;
-  width: 100%;
-  box-sizing: border-box;
+/* Checkbox Styling */
+.MuiFormControlLabel-root {
+  margin-left: -8px;
+  margin-right: 0;
 }
 
-.highcharts-container {
-  width: 100% !important;
-  height: 100% !important;
-  box-sizing: border-box;
+.MuiCheckbox-root {
+  padding: 8px;
 }
 
 /* Responsive Adjustments */
-@media (max-width: 1200px) {
-  .process-content {
-    margin-left: 200px;
-    max-width: calc(100vw - 200px);
-  }
-}
-
-@media (max-width: 1024px) {
-  .process-content {
-    margin-left: 0;
-    padding: 1rem;
-    max-width: 100vw;
-  }
-  
-  .process-topbar {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
 @media (max-width: 768px) {
-  .process-container {
-    flex-direction: column;
-  }
-  
-  .process-title {
-    font-size: 1.5rem;
-  }
-  
   .process-topbar {
-    grid-template-columns: 1fr;
-  }
-  
-  .date-range-group {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
   }
   
-  .date-range-separator {
-    display: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .process-content {
-    padding: 0.75rem;
+  .filter-group {
+    width: 100%;
   }
   
-  .metrics-chart-container {
-    padding: 1rem;
+  .checkbox-group-container {
+    width: calc(100% - 32px);
   }
 }
-

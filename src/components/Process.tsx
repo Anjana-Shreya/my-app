@@ -151,7 +151,7 @@ const Process = () => {
   return (
     <div className="process-container">
       <Sidebar />
-      <div className="process-content" style={{marginTop:"200px"}}>
+      <div className="process-content">
         <h2 className="process-title">Team Authors Report</h2>
 
         <div className="process-topbar">
@@ -283,7 +283,9 @@ const Process = () => {
           </div>
 
           {/* Date Range */}
-          <div className="filter-group">
+          <div className="filter-group" 
+            style={{background:"white", padding:"10px", display:"flex", gap:"8px", borderRadius:"8px", borderColor:"black", borderWidth:"1px"}}
+          >
             <Typography variant="subtitle1" className="filter-label">
               Date Range
             </Typography>

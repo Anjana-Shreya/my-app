@@ -1,36 +1,57 @@
-// src/components/Sidebar.tsx
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import './sidebar.css';
+import { FaChartBar, FaChevronLeft, FaChevronRight, FaCog, FaHome } from 'react-icons/fa';
 
-const Sidebar = () => {
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+const Sidebar: React.FC = () => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const toggleDropdown = (name: string) => {
-    setOpenDropdown(prev => (prev === name ? null : name));
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
   };
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">MyApp</div>
-      <nav className="sidebar-nav">
-        <NavLink to="/dashboard" className="sidebar-link">Dashboard</NavLink>
+    <div className="d-flex">
+      <nav className={`sidebar d-flex flex-column flex-shrink-0 position-fixed ${isCollapsed ? 'collapsed' : ''}`}>
+        <button className="toggle-btn" onClick={toggleSidebar} style={{color:"white"}}>
+          {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
+        </button>
 
-        <div className="sidebar-group">
-          <div className="sidebar-link" onClick={() => toggleDropdown('workflow')}>
-            Workflow
-            <span className="arrow">{openDropdown === 'workflow' ? '▾' : '▸'}</span>
-          </div>
-          {openDropdown === 'workflow' && (
-            <div className="sidebar-submenu">
-              <NavLink to="/process" className="sidebar-sublink">Process</NavLink>
-            </div>
-          )}
+        <div className="p-4">
+          <h2 className="logo-text fw-bold mb-0">HIVEL</h2>
         </div>
 
-        <NavLink to="/settings" className="sidebar-link">Settings</NavLink>
+        <div className="nav flex-column">
+          <NavLink 
+            to="/dashboard" 
+            className={({ isActive }) => 
+              `sidebar-link text-decoration-none p-3 ${isActive ? 'active' : ''}`
+            }
+          >
+            <FaHome />
+            <span className="hide-on-collapse" style={{paddingLeft:"10px"}}>Dashboard</span>
+          </NavLink>
+          <NavLink 
+            to="/process" 
+            className={({ isActive }) => 
+              `sidebar-link text-decoration-none p-3 ${isActive ? 'active' : ''}`
+            }
+          >
+            <FaChartBar />
+            <span className="hide-on-collapse" style={{paddingLeft:"10px"}}>Process</span>
+          </NavLink>
+          <NavLink 
+            to="/settings" 
+            className={({ isActive }) => 
+              `sidebar-link text-decoration-none p-3 ${isActive ? 'active' : ''}`
+            }
+          >
+            <FaCog />
+            <span className="hide-on-collapse" style={{paddingLeft:"10px"}}>Settings</span>
+          </NavLink>
+        </div>
       </nav>
-    </aside>
+    </div>
   );
 };
 

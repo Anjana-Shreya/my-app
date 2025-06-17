@@ -31,6 +31,7 @@
     "react-router-dom": "^7.6.2",
     "react-scripts": "5.0.1",
     "react-select": "^5.10.1",
+    "rsuite": "^5.49.0",
     "sass": "^1.89.2",
     "web-vitals": "^2.1.4"
   },

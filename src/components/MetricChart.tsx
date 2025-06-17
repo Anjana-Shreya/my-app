@@ -5,6 +5,7 @@ import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied';
 
 interface MetricChartProps {
   metricKey: string;
@@ -49,7 +50,7 @@ const MetricChart: React.FC<MetricChartProps> = ({
   const authData = JSON.parse(localStorage.getItem('auth') || '{}');
   const filterType = localStorage.getItem('filterType') as 'daily' | 'weekly' | 'monthly' || 'weekly';
   
-  const { data, isLoading, isError } = useGetMetricGraphDataQuery({
+  const { data, isLoading, isError, error } = useGetMetricGraphDataQuery({
     metricKey,
     params: {
       userId: authData?.user?.id || 0,
@@ -95,15 +96,52 @@ const MetricChart: React.FC<MetricChartProps> = ({
   }
 
   if (isError) {
+    // Type the error properly
+    const errorMessage = 'Failed to load chart data';
+    
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="300px">
-        <Typography color="error">Error loading chart data</Typography>
+      <Box 
+        display="flex" 
+        flexDirection="column" 
+        justifyContent="center" 
+        alignItems="center" 
+        height="300px"
+        textAlign="center"
+        p={2}
+      >
+        <Typography variant="h6" gutterBottom>
+          No Data to Show - {metricName}
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          Changing filters might help
+        </Typography>
+      </Box>
+    );
+  }
+
+  const chartData = (data as GraphResponse)?.CockpitGraphData || [];
+  if (chartData.length === 0) {
+    return (
+      <Box 
+        display="flex" 
+        flexDirection="column" 
+        justifyContent="center" 
+        alignItems="center" 
+        height="300px"
+        textAlign="center"
+        p={2}
+      >
+        <Typography variant="h6" color="textSecondary" gutterBottom>
+          No data available for: {metricName}
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          Try adjusting your filters or date range
+        </Typography>
       </Box>
     );
   }
 
   // Transform the data to match Highcharts format
-  const chartData = (data as GraphResponse)?.CockpitGraphData || [];
   const categories = chartData.map(item => item.formattedDate);
   const percentageData = chartData.map(item => item.percentage);
   const totalMetricCountData = chartData.map(item => item.totalMetricCount);
@@ -130,7 +168,6 @@ const MetricChart: React.FC<MetricChartProps> = ({
       backgroundColor: 'transparent',
       events: {
         click: function(event) {
-          // You can handle chart click here if needed
         }
       }
     },
@@ -258,7 +295,7 @@ const MetricChart: React.FC<MetricChartProps> = ({
   };
 
   return (
-    <Box sx={{ height: '100%' }}>
+    <Box sx={{ height: '100%'}}>
       <HighchartsReact
         highcharts={Highcharts}
         options={chartOptions}
