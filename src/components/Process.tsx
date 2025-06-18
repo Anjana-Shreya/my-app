@@ -80,7 +80,6 @@ const Process = () => {
   const [fetchAuthors, { data: authors }] = useGetTeamAuthorsMutation();
 
   const storedRepoIds = localStorage.getItem('repoIds');
-  // const repoIds = storedRepoIds ? JSON.parse(storedRepoIds) : [];
   const repoIds = [
     23352, 23332, 23327, 23337, 23342, 23347, 23312, 23302, 23307, 23322, 
     23317, 23318, 23308, 23323, 23313, 23333, 23338, 23343, 23348, 23328, 
@@ -135,7 +134,6 @@ const Process = () => {
     localStorage.setItem('selectedRepos', JSON.stringify(newSelectedRepos));
   };
 
-  // Select all/none functions
   const handleSelectAllTeams = () => {
     if (teams) {
       if (selectedTeams.length === teams.length) {
