@@ -1,5 +1,149 @@
-.metric-container {
-    margin-left: 220px;
-    background-color: white;
-    height: 100vh;
+.metric-details-container {
+	padding-left: 220px;
+	background-color: white;
+	height: 100vh;
+	padding-top: 30px;
+}
+
+.metric-details-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.error-container {
+  padding: 24px;
+  text-align: center;
+}
+
+.back-button {
+  margin-bottom: 20px;
+  text-transform: none;
+  font-weight: 500;
+}
+
+.metric-title {
+  color: #2c3e50;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.metric-subtitle {
+  color: #7f8c8d;
+  margin-bottom: 24px;
+}
+
+.tabs-container {
+  margin-top: 32px;
+}
+
+.metric-tabs {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.metric-tab {
+  text-transform: none;
+  font-weight: 500;
+  min-width: 120px;
+}
+
+.table-container {
+  margin-top: 24px;
+}
+
+.table-title {
+  color: #2c3e50;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.metric-table-container {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  max-height: 500px;
+}
+
+.table-header {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.table-row-even {
+  background-color: white;
+}
+
+.table-row-odd {
+  background-color: #f8f9fa;
+}
+
+.table-cell {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.chart-container {
+  margin-top: 24px;
+}
+
+.chart-paper {
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.no-data-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+}
+
+.no-data-text {
+  color: #7f8c8d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .metric-details-content {
+    padding: 16px;
+  }
+  
+  .metric-title {
+    font-size: 1.5rem;
+  }
+  
+  .metric-tab {
+    min-width: auto;
+    padding: 6px 12px;
+  }
+  
+  .table-cell {
+    padding: 8px 12px;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .metric-title {
+    font-size: 1.25rem;
+  }
+  
+  .metric-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .back-button {
+    font-size: 0.875rem;
+  }
 }

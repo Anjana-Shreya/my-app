@@ -1,5 +1,4 @@
-// src/components/MetricChart.tsx
-import React from 'react';
+import React, { useRef } from 'react';
 import { useGetMetricGraphDataQuery } from '../slice/dashboardApiSlice';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
@@ -41,6 +40,7 @@ const MetricChart: React.FC<MetricChartProps> = ({
   yaxisSuffix 
 }) => {
   const navigate = useNavigate();
+  const chartRef = useRef<HTMLDivElement>(null);
   
   // Get filter values from localStorage
   const startDate = localStorage.getItem('startDate2');
@@ -64,7 +64,7 @@ const MetricChart: React.FC<MetricChartProps> = ({
     }
   });
 
-  const handlePointClick = (event: Highcharts.PointClickEventObject) => {
+  const handleContainerClick = () => {
     // Prepare the payload to pass to the detail page
     const payload = {
       startDate: startDate ? parseInt(startDate) : Math.floor(Date.now() / 1000) - 86400 * 7,
@@ -78,8 +78,6 @@ const MetricChart: React.FC<MetricChartProps> = ({
       projectIds: [],
       advancedFilters: {},
       signal: {},
-      // Add any additional data you want to pass
-      pointData: event.point.options
     };
 
     // Navigate to detail page with the payload
@@ -95,9 +93,6 @@ const MetricChart: React.FC<MetricChartProps> = ({
   }
 
   if (isError) {
-    // Type the error properly
-    const errorMessage = 'Failed to load chart data';
-    
     return (
       <Box 
         display="flex" 
@@ -167,6 +162,8 @@ const MetricChart: React.FC<MetricChartProps> = ({
       backgroundColor: 'transparent',
       events: {
         click: function(event) {
+          // Prevent chart click from bubbling up to container
+          event.stopPropagation();
         }
       }
     },
@@ -197,7 +194,10 @@ const MetricChart: React.FC<MetricChartProps> = ({
         cursor: 'pointer',
         point: {
           events: {
-            click: handlePointClick
+            click: function(event) {
+              // Prevent point click from bubbling up
+              event.stopPropagation();
+            }
           }
         }
       },
@@ -261,12 +261,12 @@ const MetricChart: React.FC<MetricChartProps> = ({
       shared: true,
       useHTML: true,
       headerFormat: '<small>{point.key}</small><table>',
-pointFormat: `
-  <tr>
-    <td style="color: {series.color}">{series.name}: </td>
-    <td style="text-align: right"><b>{point.y}</b></td>
-  </tr>
-`,
+      pointFormat: `
+        <tr>
+          <td style="color: {series.color}">{series.name}: </td>
+          <td style="text-align: right"><b>{point.y}</b></td>
+        </tr>
+      `,
       footerFormat: '</table>'
     },
     legend: {
@@ -276,30 +276,29 @@ pointFormat: `
     },
     credits: {
       enabled: false
-    },
-    responsive: {
-      rules: [{
-        condition: {
-          maxWidth: 500
-        },
-        chartOptions: {
-          legend: {
-            layout: 'horizontal',
-            align: 'center',
-            verticalAlign: 'bottom'
-          }
-        }
-      }]
     }
   };
 
   return (
-    <Box sx={{ height: '100%'}}>
-      <HighchartsReact
-        highcharts={Highcharts}
-        options={chartOptions}
-        containerProps={{ style: { height: '100%', width: '100%' } }}
-      />
+    <Box 
+      ref={chartRef}
+      sx={{ 
+        height: '100%',
+        cursor: 'pointer',
+        position: 'relative',
+        '&:hover': {
+          boxShadow: '0px 0px 10px rgba(0,0,0,0.1)'
+        }
+      }}
+      onClick={handleContainerClick}
+    >
+      <div style={{ pointerEvents: 'none' }}>
+        <HighchartsReact
+          highcharts={Highcharts}
+          options={chartOptions}
+          containerProps={{ style: { height: '100%', width: '100%' } }}
+        />
+      </div>
     </Box>
   );
 };

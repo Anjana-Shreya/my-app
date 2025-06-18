@@ -1,4 +1,3 @@
-// src/components/MetricDetails.tsx
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -16,10 +15,10 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import { useGetMetricDetailsQuery, useGetTeamMetricsQuery } from '../slice/dashboardApiSlice';
+import { useGetTeamMetricsQuery } from '../slice/dashboardApiSlice';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import './metricdetail.css'
+import './metricdetail.css';
 
 interface TeamMetricData {
   teamId: number;
@@ -81,7 +80,7 @@ const MetricDetails = () => {
 
   if (isLoadingMetrics) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box className="loading-container">
         <CircularProgress />
       </Box>
     );
@@ -89,83 +88,133 @@ const MetricDetails = () => {
 
   if (isMetricsError || !teamMetrics) {
     return (
-      <Box p={4}>
+      <Box className="error-container">
         <Typography variant="h6" color="error">Error loading metric details</Typography>
-        <Button variant="contained" onClick={() => navigate('/dashboard')}>
+        <Button 
+          variant="contained" 
+          onClick={() => navigate('/dashboard')}
+          className="back-button"
+        >
           Back to Dashboard
         </Button>
       </Box>
     );
   }
 
-	const prepareChartData = (): { categories: string[]; series: { name: string; data: number[] }[] } => {
-	if (!teamMetrics?.graphData) {
-			return { categories: [], series: [] };
-	}
+  const prepareChartData = (): { categories: string[]; series: { name: string; data: number[] }[] } => {
+    if (!teamMetrics?.graphData) {
+      return { categories: [], series: [] };
+    }
 
-	const seriesMap: Record<number, { name: string; data: number[] }> = {};
-	const categories: string[] = [];
+    const seriesMap: Record<number, { name: string; data: number[] }> = {};
+    const categories: string[] = [];
 
-	Object.entries(teamMetrics.graphData).forEach(([date, teamData]) => {
-			categories.push(date);
+    Object.entries(teamMetrics.graphData).forEach(([date, teamData]) => {
+      categories.push(date);
+      teamData.forEach((team: TeamMetricData) => {
+        if (!seriesMap[team.teamId]) {
+          seriesMap[team.teamId] = {
+            name: team.teamName,
+            data: []
+          };
+        }
+      });
+    });
 
-			teamData.forEach((team: TeamMetricData) => {
-			if (!seriesMap[team.teamId]) {
-					seriesMap[team.teamId] = {
-					name: team.teamName,
-					data: []
-					};
-			}
-			});
-	});
+    Object.entries(teamMetrics.graphData).forEach(([_, teamData]) => {
+      Object.keys(seriesMap).forEach(teamId => {
+        const team = teamData.find((t: TeamMetricData) => t.teamId === Number(teamId));
+        seriesMap[Number(teamId)].data.push(team?.totalMetricValue || 0);
+      });
+    });
 
-	Object.entries(teamMetrics.graphData).forEach(([_, teamData]) => {
-			Object.keys(seriesMap).forEach(teamId => {
-			const team = teamData.find((t: TeamMetricData) => t.teamId === Number(teamId));
-			seriesMap[Number(teamId)].data.push(team?.totalMetricValue || 0);
-			});
-	});
-
-	return {
-			categories,
-			series: Object.values(seriesMap)
-	};
-	};
-
+    return {
+      categories,
+      series: Object.values(seriesMap)
+    };
+  };
 
   const { categories, series } = prepareChartData();
 
   // Prepare chart options
   const chartOptions: Highcharts.Options = {
     title: {
-      text: `${payload.metricType?.replace(/-/g, ' ') || 'Metric'} by Team`
+      text: `${payload.metricType?.replace(/-/g, ' ') || 'Metric'} by Team`,
+      style: {
+        fontSize: '18px',
+        fontWeight: 'bold',
+        color: '#333'
+      }
     },
     chart: {
       type: 'column',
-      height: 400
+      height: 400,
+      backgroundColor: 'transparent',
+      borderRadius: 8,
+      spacing: [20, 20, 20, 20]
     },
     xAxis: {
       categories: categories,
       title: {
-        text: 'Week'
+        text: 'Time Period',
+        style: {
+          fontWeight: 'bold'
+        }
+      },
+      labels: {
+        style: {
+          fontSize: '12px'
+        }
       }
     },
     yAxis: {
       title: {
-        text: 'Total Metric Value'
-      }
+        text: 'Commits',
+        style: {
+          fontWeight: 'bold'
+        }
+      },
+      gridLineWidth: 1,
+      gridLineColor: '#f0f0f0'
     },
     plotOptions: {
       column: {
         stacking: 'normal',
-        borderRadius: 3,
+        borderRadius: 4,
         pointPadding: 0.1,
-        groupPadding: 0.1
+        groupPadding: 0.1,
+        borderWidth: 0,
+        dataLabels: {
+          enabled: true,
+          format: '{point.y}',
+          style: {
+            textOutline: 'none',
+            fontSize: '11px'
+          }
+        }
       }
     },
     tooltip: {
       headerFormat: '<b>{point.x}</b><br/>',
-      pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+      pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y}</b><br/>',
+      shared: true,
+      useHTML: true,
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      borderWidth: 1,
+      borderColor: '#e0e0e0',
+      shadow: true,
+      style: {
+        padding: '10px'
+      }
+    },
+    legend: {
+      itemStyle: {
+        fontSize: '12px',
+        fontWeight: 'normal'
+      },
+      itemHoverStyle: {
+        color: '#555'
+      }
     },
     series: series as Highcharts.SeriesOptionsType[],
     credits: {
@@ -184,84 +233,89 @@ const MetricDetails = () => {
   });
 
   return (
-		<div className='metric-container'>
-			<Box p={4}>
-				<Button 
-					variant="outlined" 
-					onClick={() => navigate(-1)}
-					sx={{ mb: 2 }}
-				>
-					Back to Chart
-				</Button>
+    <div className="metric-details-container">
+      <Box className="metric-details-content">
+        <Button 
+          variant="outlined" 
+          onClick={() => navigate(-1)}
+          className="back-button"
+          style={{marginBottom:"15px"}}
+        >
+          Back to Chart
+        </Button>
 
-				<Typography variant="h4" gutterBottom>
-					Team Metrics for {payload.metricType?.replace(/-/g, ' ') || 'Metric'}
-				</Typography>
+        <Typography variant="h4" className="metric-title" gutterBottom>
+          Team Metrics for {payload.metricType?.replace(/-/g, ' ') || 'Metric'}
+        </Typography>
 
-				<Typography variant="subtitle1" gutterBottom>
-					{new Date((payload.startDate || 0) * 1000).toLocaleDateString()} - {new Date((payload.endDate || 0) * 1000).toLocaleDateString()}
-					{' | '}
-					{payload.teamIds?.length || 0} team(s) selected
-				</Typography>
+        <Typography variant="subtitle1" className="metric-subtitle" gutterBottom>
+          {new Date((payload.startDate || 0) * 1000).toLocaleDateString()} - {new Date((payload.endDate || 0) * 1000).toLocaleDateString()}
+          {' | '}
+          {payload.teamIds?.length || 0} team(s) selected
+        </Typography>
 
-				<Box mt={4}>
-					<Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 3 }}>
-						<Tab label="Data Table" />
-						<Tab label="Visualization" />
-					</Tabs>
+        <Box className="tabs-container">
+          {/* <Tabs 
+            value={tabValue} 
+            onChange={handleTabChange} 
+            className="metric-tabs"
+          >
+            <Tab label="Data Table" className="metric-tab" />
+            <Tab label="Visualization" className="metric-tab" />
+          </Tabs> */}
 
-					{tabValue === 0 && (
-						<>
-							<Typography variant="h6" gutterBottom>Detailed Metrics</Typography>
-							<TableContainer component={Paper} style={{height:"300px", overflowY:"scroll"}}>
-								<Table>
-									<TableHead>
-										<TableRow>
-											<TableCell>Date</TableCell>
-											<TableCell>Team</TableCell>
-											<TableCell align="right">Metric Value</TableCell>
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{tableData.map((row, index) => (
-											<TableRow key={`${row.date}-${row.teamName}-${index}`}>
-												<TableCell>{row.date}</TableCell>
-												<TableCell>{row.teamName}</TableCell>
-												<TableCell align="right">{row.totalMetricValue}</TableCell>
-											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-							</TableContainer>
-						</>
-					)}
+          {/* {tabValue === 0 && (
+            <Box className="table-container">
+              <Typography variant="h6" className="table-title" gutterBottom>
+                Detailed Metrics
+              </Typography>
+              <TableContainer component={Paper} className="metric-table-container">
+                <Table stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell className="table-header">Date</TableCell>
+                      <TableCell className="table-header">Team</TableCell>
+                      <TableCell align="right" className="table-header">Metric Value</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {tableData.map((row, index) => (
+                      <TableRow 
+                        key={`${row.date}-${row.teamName}-${index}`}
+                        className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}
+                      >
+                        <TableCell className="table-cell">{row.date}</TableCell>
+                        <TableCell className="table-cell">{row.teamName}</TableCell>
+                        <TableCell align="right" className="table-cell">{row.totalMetricValue}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )} */}
 
-					{tabValue === 1 && (
-						<Box sx={{ width: '100%', mt: 3 }}>
-							<Paper elevation={3} sx={{ p: 2 }}>
-								{series.length > 0 ? (
-									<HighchartsReact
-										highcharts={Highcharts}
-										options={chartOptions}
-									/>
-								) : (
-									<Box 
-										display="flex" 
-										justifyContent="center" 
-										alignItems="center" 
-										height={400}
-									>
-										<Typography variant="body1" color="textSecondary">
-											No chart data available
-										</Typography>
-									</Box>
-								)}
-							</Paper>
-						</Box>
-					)}
-				</Box>
-			</Box>
-		</div>
+          {/* {tabValue === 1 && ( */}
+            <Box className="chart-container">
+              <Paper elevation={3} className="chart-paper">
+                {series.length > 0 ? (
+                  <HighchartsReact
+                    highcharts={Highcharts}
+                    options={chartOptions}
+                  />
+                ) : (
+                  <Box className="no-data-container">
+                    <Typography variant="body1" className="no-data-text">
+                      No chart data available
+                    </Typography>
+                  </Box>
+                )}
+              </Paper>
+            </Box>
+          {/* )} */}
+        </Box>
+      </Box>
+    </div>
   );
 };
 

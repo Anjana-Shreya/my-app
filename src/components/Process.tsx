@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import {
   useGetHierarchicalTeamQuery,
@@ -13,6 +13,25 @@ import { Checkbox, FormControlLabel, FormGroup, Box, Typography, Collapse, IconB
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { DateRangePicker } from 'rsuite';
 import 'rsuite/dist/rsuite.min.css';
+
+const useOutsideClick = (callback: () => void) => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        callback();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [callback]);
+
+  return ref;
+};
 
 const Process = () => {
   const user = useSelector(selectCurrentUser);
@@ -41,6 +60,11 @@ const Process = () => {
   const [openRepos, setOpenRepos] = useState(false);
   const [openTeams, setOpenTeams] = useState(false);
   const [openAuthors, setOpenAuthors] = useState(false);
+
+  // Create refs for each dropdown
+  const reposRef = useOutsideClick(() => setOpenRepos(false));
+  const teamsRef = useOutsideClick(() => setOpenTeams(false));
+  const authorsRef = useOutsideClick(() => setOpenAuthors(false));
 
   // Date range state
   const [dateRange, setDateRange] = useState<[Date, Date]>(() => {
@@ -179,10 +203,17 @@ const Process = () => {
 
         <div className="process-topbar" style={{display:"flex", alignItems:"center"}}>
           {/* Repositories Dropdown with Checkboxes */}
-          <div className="filter-group">
-            <div className="dropdown-header" onClick={() => setOpenRepos(!openRepos)} style={{display:"flex"}}>
+          <div className="filter-group" ref={reposRef}>
+            <div 
+              className="dropdown-header" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenRepos(!openRepos);
+              }} 
+              style={{display:"flex"}}
+            >
               <Typography variant="subtitle1" className="filter-label">
-                Select Repository(ies)
+                Select Branches
               </Typography>
               <IconButton size="small">
                 {openRepos ? <ExpandLess /> : <ExpandMore />}
@@ -221,8 +252,15 @@ const Process = () => {
           </div>
 
           {/* Teams Dropdown with Checkboxes */}
-          <div className="filter-group">
-            <div className="dropdown-header" onClick={() => setOpenTeams(!openTeams)} style={{display:"flex"}}>
+          <div className="filter-group" ref={teamsRef}>
+            <div 
+              className="dropdown-header" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenTeams(!openTeams);
+              }} 
+              style={{display:"flex"}}
+            >
               <Typography variant="subtitle1" className="filter-label">
                 Select Team(s)
               </Typography>
@@ -263,8 +301,15 @@ const Process = () => {
           </div>
 
           {/* Authors Dropdown with Checkboxes */}
-          <div className="filter-group">
-            <div className="dropdown-header" onClick={() => setOpenAuthors(!openAuthors)} style={{display:"flex"}}>
+          <div className="filter-group" ref={authorsRef}>
+            <div 
+              className="dropdown-header" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenAuthors(!openAuthors);
+              }} 
+              style={{display:"flex"}}
+            >
               <Typography variant="subtitle1" className="filter-label">
                 Select Author(s)
               </Typography>
@@ -306,7 +351,7 @@ const Process = () => {
           </div>
 
           {/* Date Range - RSuite Version */}
-          <div className="filter-group date-group" style={{display:"flex", alignItems:"center"}}>
+          <div className="filter-group date-group" style={{display:"flex", alignItems:"center", justifyContent:"center"}}>
             <Typography variant="subtitle1" className="filter-label" style={{width:"150px"}}>
               Date Range
             </Typography>

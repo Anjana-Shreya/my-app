@@ -60,7 +60,7 @@ body {
 
 .main-content {
     margin-left: var(--sidebar-width);
-    background-color: #f8f9fa;
+    /* background-color: #f8f9fa; */
     min-height: 100vh;
     padding: 20px;
     transition: all 0.3s ease;
@@ -85,9 +85,9 @@ body {
     transition: transform 0.3s ease;
 }
 
-.collapsed .toggle-btn {
+/* .collapsed .toggle-btn {
     transform: rotate(180deg);
-}
+} */
 
 .collapsed .hide-on-collapse {
     opacity: 0;
