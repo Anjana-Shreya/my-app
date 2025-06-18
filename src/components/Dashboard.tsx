@@ -2,7 +2,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { logout } from '../slice/authSlice';
 import { setSearchTerm, setSelectedOption, filterTemplates } from '../slice/templateSlice';
 import { dashboardApi } from '../slice/dashboardApiSlice';
 import './dashboard.css';
@@ -27,7 +26,6 @@ interface DashboardProps {
   setSearchTerm: (term: string) => void;
   setSelectedOption: (option: string) => void;
   filterTemplates: (templates: DashboardTemplate[]) => void;
-  logout: () => void;
   getOrgTemplates: (orgId: number) => void;
   getOrgDashboards: (params: { orgId: number, userId: number }) => void;
 
@@ -51,7 +49,6 @@ class Dashboard extends Component<DashboardProps> {
 
 // In your Dashboard.tsx component
 handleTemplateClick = (item: any) => {
-  // Save the dashboard data to localStorage for easy access in detail view
   const savedDashboards = JSON.parse(localStorage.getItem('dashboards') || '[]');
   const parsedDashboards = Array.isArray(savedDashboards) ? savedDashboards : [];
   
@@ -65,11 +62,9 @@ handleTemplateClick = (item: any) => {
   
   localStorage.setItem('dashboards', JSON.stringify(parsedDashboards));
   
-  // Navigate to detail view
   this.props.history.push(`/dashboard/${item.id}`);
 };
 
-  // In Dashboard.tsx
   handleToggleFavorite = (e: React.MouseEvent, item: any) => {
     e.stopPropagation();
     
@@ -167,11 +162,6 @@ handleTemplateClick = (item: any) => {
 
     filterTemplates(filtered);
   }
-
-  handleLogout = () => {
-    this.props.logout();
-    this.props.history.push('/');
-  };
 
   handleRetry = () => {
     const { auth, getOrgTemplates, getOrgDashboards } = this.props;
@@ -292,10 +282,6 @@ handleTemplateClick = (item: any) => {
               </div>
             )}
           </div>
-
-          <button onClick={this.handleLogout} className="logout-button" style={{marginBottom:"20px"}}>
-            Logout
-          </button>
         </div>
       </div>
     );
@@ -318,7 +304,6 @@ const mapDispatchToProps = {
   setSearchTerm,
   setSelectedOption,
   filterTemplates,
-  logout,
   getOrgTemplates: dashboardApi.endpoints.getOrgTemplates.initiate,
   getOrgDashboards: dashboardApi.endpoints.getUserDashboards.initiate
 };

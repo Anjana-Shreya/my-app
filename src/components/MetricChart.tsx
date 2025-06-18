@@ -5,7 +5,6 @@ import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied';
 
 interface MetricChartProps {
   metricKey: string;
@@ -185,11 +184,11 @@ const MetricChart: React.FC<MetricChartProps> = ({
     },
     yAxis: {
       title: {
-        text: yaxisSuffix ? `Value (${yaxisSuffix})` : 'Value'
+        text: 'Commits'
       },
       labels: {
-        formatter: function() {
-          return yaxisSuffix ? `${this.value} ${yaxisSuffix}` : this.value.toString();
+        formatter: function () {
+          return this.value.toString();
         }
       }
     },
@@ -262,12 +261,12 @@ const MetricChart: React.FC<MetricChartProps> = ({
       shared: true,
       useHTML: true,
       headerFormat: '<small>{point.key}</small><table>',
-      pointFormat: `
-        <tr>
-          <td style="color: {series.color}">{series.name}: </td>
-          <td style="text-align: right"><b>{point.y}${yaxisSuffix ? ' ' + yaxisSuffix : ''}</b></td>
-        </tr>
-      `,
+pointFormat: `
+  <tr>
+    <td style="color: {series.color}">{series.name}: </td>
+    <td style="text-align: right"><b>{point.y}</b></td>
+  </tr>
+`,
       footerFormat: '</table>'
     },
     legend: {

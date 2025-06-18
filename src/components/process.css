@@ -2,12 +2,13 @@
 .process-container {
   display: flex;
   min-height: 100vh;
+  background-color: white;
 }
 
 .process-content {
   flex: 1;
   padding: 20px;
-  margin-left: 250px; /* Adjust based on your sidebar width */
+  margin-left: 250px;
 }
 
 .process-title {
@@ -114,4 +115,10 @@
   .checkbox-group-container {
     width: calc(100% - 32px);
   }
+}
+
+.date-group {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 3px 5px;
 }

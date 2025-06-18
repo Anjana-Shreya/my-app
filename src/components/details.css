@@ -178,3 +178,36 @@
   color: #666;
   margin-bottom: 24px;
 }
+
+/* details.css */
+
+/* RSuite DateRangePicker styles */
+.rsuite-daterange-picker {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.rsuite-daterange-picker .rs-picker-toggle {
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+}
+
+.rsuite-daterange-picker .rs-picker-toggle-caret {
+  color: #666;
+}
+
+.rsuite-daterange-picker .rs-picker-toggle-clean {
+  right: 30px;
+}
+
+.rs-picker-daterange-menu {
+  z-index: 1500; 
+}
+
+@media (max-width: 768px) {
+  .rsuite-daterange-picker {
+    width: 100%;
+  }
+}
+

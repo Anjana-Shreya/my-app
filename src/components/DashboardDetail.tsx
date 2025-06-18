@@ -4,14 +4,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useGetHierarchicalTeamQuery } from '../slice/teamApiSlice';
 import { selectCurrentUser } from '../slice/authSlice';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 import { addDays } from 'date-fns';
 import { Checkbox, FormControlLabel, FormGroup, Box, Typography, Collapse, IconButton, Button, CircularProgress, Paper } from '@mui/material';
-import Grid from '@mui/material/Grid';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import MetricChart from './MetricChart';
 import "./details.css";
+import { DateRangePicker } from 'rsuite';
+import 'rsuite/dist/rsuite.min.css';
 
 interface Metric {
   id: number;
@@ -45,32 +44,33 @@ const DashboardDetail = () => {
   const userId = user?.id;
   const orgId = user?.organization?.id;
 
-  // Initialize dates from localStorage or default values
-  const [startDate, setStartDate] = useState<Date | null>(() => {
-    const stored = localStorage.getItem('startDate2');
+  const [dateRange, setDateRange] = useState<[Date, Date]>(() => {
+    const storedStart = localStorage.getItem('startDate2');
+    const storedEnd = localStorage.getItem('endDate2');
+    
     try {
-      if (stored && !isNaN(Number(stored))) {
-        return new Date(Number(stored) * 1000);
-      }
-      return addDays(new Date(), -7); // Default to 7 days ago
+      const start = storedStart && !isNaN(Number(storedStart)) 
+        ? new Date(Number(storedStart) * 1000) 
+        : addDays(new Date(), -7);
+      const end = storedEnd && !isNaN(Number(storedEnd)) 
+        ? new Date(Number(storedEnd) * 1000) 
+        : new Date();
+      
+      return [start, end];
     } catch (error) {
-      console.error('Error parsing startDate:', error);
-      return addDays(new Date(), -7);
+      console.error('Error parsing dates:', error);
+      return [addDays(new Date(), -7), new Date()];
     }
   });
 
-  const [endDate, setEndDate] = useState<Date | null>(() => {
-    const stored = localStorage.getItem('endDate2');
-    try {
-      if (stored && !isNaN(Number(stored))) {
-        return new Date(Number(stored) * 1000);
-      }
-      return new Date(); // Default to current date
-    } catch (error) {
-      console.error('Error parsing endDate:', error);
-      return new Date();
+    // Handle date range change
+  const handleDateRangeChange = (value: [Date, Date] | null) => {
+    if (value) {
+      setDateRange(value);
+      localStorage.setItem('startDate2', `${Math.floor(value[0].getTime() / 1000)}`);
+      localStorage.setItem('endDate2', `${Math.floor(value[1].getTime() / 1000)}`);
     }
-  });
+  };
 
   // Get data from localStorage if available
   const [selectedTeams, setSelectedTeams] = useState<number[]>(() => {
@@ -168,41 +168,42 @@ const DashboardDetail = () => {
 
         {/* Filters Section */}
         <div className="filters-container">
-          {/* Date Range Filter */}
           <div className="filter-card">
             <Typography variant="subtitle1" className="filter-label">
               Date Range
             </Typography>
-            <div className="date-range-group">
-              <DatePicker
-                selected={startDate}
-                onChange={(date) => {
-                  setStartDate(date);
-                  if (date) localStorage.setItem('startDate2', `${Math.floor(date.getTime() / 1000)}`);
-                }}
-                selectsStart
-                startDate={startDate}
-                endDate={endDate}
-                className="date-picker-input"
-                placeholderText="Start date"
-                dateFormat="dd/MM/yyyy"
-              />
-              <span className="date-range-separator">to</span>
-              <DatePicker
-                selected={endDate}
-                onChange={(date) => {
-                  setEndDate(date);
-                  if (date) localStorage.setItem('endDate2', `${Math.floor(date.getTime() / 1000)}`);
-                }}
-                selectsEnd
-                startDate={startDate}
-                endDate={endDate}
-                minDate={startDate ?? undefined}
-                className="date-picker-input"
-                placeholderText="End date"
-                dateFormat="dd/MM/yyyy"
-              />
-            </div>
+            <DateRangePicker
+              value={dateRange}
+              onChange={handleDateRangeChange}
+              format="dd/MM/yyyy"
+              placeholder="Select date range"
+              className="rsuite-daterange-picker"
+              cleanable={false}
+              showOneCalendar
+              placement="bottomEnd" 
+              ranges={[
+                {
+                  label: 'Today',
+                  value: [new Date(), new Date()],
+                  placement: 'left' 
+                },
+                {
+                  label: 'Yesterday',
+                  value: [addDays(new Date(), -1), addDays(new Date(), -1)],
+                  placement: 'left'
+                },
+                {
+                  label: 'Last 7 Days',
+                  value: [addDays(new Date(), -6), new Date()],
+                  placement: 'left'
+                },
+                {
+                  label: 'Last 30 Days',
+                  value: [addDays(new Date(), -29), new Date()],
+                  placement: 'left'
+                }
+              ]}
+            />
           </div>
 
           {/* Time Granularity Filter */}
@@ -307,7 +308,7 @@ const DashboardDetail = () => {
                     metricKey={metric.metricKey}
                     metricName={metric.metricName}
                     metricDescription={metric.metricDescription}
-                    yaxisSuffix={metric.yaxisSuffix}
+                    yaxisSuffix=""
                   />
                 </Paper>
               </div>

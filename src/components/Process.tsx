@@ -3,16 +3,16 @@ import { useSelector } from 'react-redux';
 import {
   useGetHierarchicalTeamQuery,
   useGetTeamAuthorsMutation,
-  useGetGitReposQuery
+  useGetBranchesQuery
 } from '../slice/teamApiSlice';
 import { selectCurrentUser } from '../slice/authSlice';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 import { addDays } from 'date-fns';
 import './process.css';
 import Graph1 from './Graph1';
 import { Checkbox, FormControlLabel, FormGroup, Box, Typography, Collapse, IconButton } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
+import { DateRangePicker } from 'rsuite';
+import 'rsuite/dist/rsuite.min.css';
 
 const Process = () => {
   const user = useSelector(selectCurrentUser);
@@ -42,15 +42,34 @@ const Process = () => {
   const [openTeams, setOpenTeams] = useState(false);
   const [openAuthors, setOpenAuthors] = useState(false);
 
-  const [startDate, setStartDate] = useState<Date | null>(() => {
-    const stored = localStorage.getItem('startDate');
-    return stored ? new Date(Number(stored) * 1000) : new Date();
+  // Date range state
+  const [dateRange, setDateRange] = useState<[Date, Date]>(() => {
+    const storedStart = localStorage.getItem('startDate');
+    const storedEnd = localStorage.getItem('endDate');
+    
+    const defaultStart = addDays(new Date(), -7);
+    const defaultEnd = new Date();
+    
+    try {
+      const start = storedStart ? new Date(parseInt(storedStart) * 1000) : defaultStart;
+      const end = storedEnd ? new Date(parseInt(storedEnd) * 1000) : defaultEnd;
+      
+      return [start, end];
+    } catch (error) {
+      console.error('Error parsing dates:', error);
+      return [defaultStart, defaultEnd];
+    }
   });
 
-  const [endDate, setEndDate] = useState<Date | null>(() => {
-    const stored = localStorage.getItem('endDate');
-    return stored ? new Date(Number(stored) * 1000) : addDays(new Date(), 7);
-  });
+  const [startDate, endDate] = dateRange;
+
+  const handleDateRangeChange = (value: [Date, Date] | null) => {
+    if (value) {
+      setDateRange(value);
+      localStorage.setItem('startDate', `${Math.floor(value[0].getTime() / 1000)}`);
+      localStorage.setItem('endDate', `${Math.floor(value[1].getTime() / 1000)}`);
+    }
+  };
 
   // Fetch
   const { data: teams, isLoading: isLoadingTeams } = useGetHierarchicalTeamQuery(
@@ -61,9 +80,17 @@ const Process = () => {
   const [fetchAuthors, { data: authors }] = useGetTeamAuthorsMutation();
 
   const storedRepoIds = localStorage.getItem('repoIds');
-  const repoIds = storedRepoIds ? JSON.parse(storedRepoIds) : [];
+  // const repoIds = storedRepoIds ? JSON.parse(storedRepoIds) : [];
+  const repoIds = [
+    23352, 23332, 23327, 23337, 23342, 23347, 23312, 23302, 23307, 23322, 
+    23317, 23318, 23308, 23323, 23313, 23333, 23338, 23343, 23348, 23328, 
+    23303, 23353, 23354, 23304, 23329, 23349, 23314, 23324, 23309, 23334, 
+    23339, 23344, 23319, 23310, 23330, 23305, 23350, 23315, 23335, 23320, 
+    23340, 23345, 23325, 23311, 23321, 23346, 23331, 23306, 23326, 23336, 
+    23351, 23341, 23316
+  ];
 
-  const { data: repos = [], isLoading: isLoadingRepos } = useGetGitReposQuery(
+  const { data: repos = [], isLoading: isLoadingRepos } = useGetBranchesQuery(
     { repoIds },
     { skip: repoIds.length === 0 }
   );
@@ -152,7 +179,7 @@ const Process = () => {
       <div className="process-content">
         <h2 className="process-title">Team Authors Report</h2>
 
-        <div className="process-topbar">
+        <div className="process-topbar" style={{display:"flex", alignItems:"center"}}>
           {/* Repositories Dropdown with Checkboxes */}
           <div className="filter-group">
             <div className="dropdown-header" onClick={() => setOpenRepos(!openRepos)} style={{display:"flex"}}>
@@ -280,47 +307,46 @@ const Process = () => {
             </Collapse>
           </div>
 
-          {/* Date Range */}
-          <div className="filter-group" 
-            style={{background:"white", padding:"10px", display:"flex", gap:"8px", borderRadius:"8px", borderColor:"black", borderWidth:"1px"}}
-          >
-            <Typography variant="subtitle1" className="filter-label">
+          {/* Date Range - RSuite Version */}
+          <div className="filter-group date-group" style={{display:"flex", alignItems:"center"}}>
+            <Typography variant="subtitle1" className="filter-label" style={{width:"150px"}}>
               Date Range
             </Typography>
-            <div className="date-range-group">
-              <DatePicker
-                selected={startDate}
-                onChange={(date) => {
-                  setStartDate(date);
-                  if (date) localStorage.setItem('startDate', `${Math.floor(date.getTime() / 1000)}`);
-                }}
-                selectsStart
-                startDate={startDate}
-                endDate={endDate}
-                className="date-picker"
-                placeholderText="Start date"
-                dateFormat="dd/MM/yyyy"
-              />
-              <span className="date-range-separator">to</span>
-              <DatePicker
-                selected={endDate}
-                onChange={(date) => {
-                  setEndDate(date);
-                  if (date) localStorage.setItem('endDate', `${Math.floor(date.getTime() / 1000)}`);
-                }}
-                selectsEnd
-                startDate={startDate}
-                endDate={endDate}
-                minDate={startDate ?? undefined}
-                className="date-picker"
-                placeholderText="End date"
-                dateFormat="dd/MM/yyyy"
-              />
-            </div>
+            <DateRangePicker
+              value={dateRange}
+              onChange={handleDateRangeChange}
+              format="dd/MM/yyyy"
+              placeholder="Select date range"
+              className="rsuite-daterange-picker"
+              cleanable={false}
+              showOneCalendar
+              placement="bottomEnd"
+              ranges={[
+                {
+                  label: 'Today',
+                  value: [new Date(), new Date()],
+                  placement: 'left'
+                },
+                {
+                  label: 'Yesterday',
+                  value: [addDays(new Date(), -1), addDays(new Date(), -1)],
+                  placement: 'left'
+                },
+                {
+                  label: 'Last 7 Days',
+                  value: [addDays(new Date(), -6), new Date()],
+                  placement: 'left'
+                },
+                {
+                  label: 'Last 30 Days',
+                  value: [addDays(new Date(), -29), new Date()],
+                  placement: 'left'
+                }
+              ]}
+            />
           </div>
         </div>
 
-        {/* <ProcessMetrics /> */}
         <Graph1 />
       </div>
     </div>

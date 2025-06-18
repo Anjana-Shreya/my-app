@@ -71,34 +71,25 @@ export const teamApi = createApi({
       }
     }),
 
-    getGitRepos: builder.query<string[], { repoIds: number[] }>({
+    getBranches: builder.query<string[], { repoIds: number[] }>({
       query: ({ repoIds }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
-          query: `
-            query GetRepos($repoIds: [Int!]!) {
-              getBranches(repoIds: $repoIds)
-            }
-          `,
-          variables: { repoIds }
-        },
-        headers: {
-          'Content-Type': 'application/json'
+          query: `query GetBranches($repoIds: [Int!]!) {
+            getBranches(repoIds: $repoIds)
+          }`,
+          variables: {
+            repoIds: repoIds
+          }
         }
       }),
       transformResponse: (response: any) => {
-        const branches = response?.data?.getBranches || [];
-        localStorage.setItem('branches', JSON.stringify(branches));
-        localStorage.setItem('repoIds', JSON.stringify([
-          23352,23332,23307,23327,23337,23342,23347,23312,23317,23302,
-          23322,23318,23303,23313,23308,23323,23333,23338,23343,23348,
-          23328,23353,23354,23309,23329,23349,23314,23304,23334,23339,
-          23344,23324,23319,23310,23330,23305,23350,23315,23335,23320,
-          23340,23345,23325,23346,23331,23316,23336,23306,23326,23351,
-          23341,23311,23321
-        ]));
-        return branches;
+        if (!response?.data?.getBranches) {
+          console.error('Invalid response format from getBranches', response);
+          return [];
+        }
+        return response.data.getBranches;
       }
     })
   })
@@ -107,5 +98,5 @@ export const teamApi = createApi({
 export const { 
   useGetHierarchicalTeamQuery,
   useGetTeamAuthorsMutation, 
-  useGetGitReposQuery
+  useGetBranchesQuery
 } = teamApi;
