@@ -6,7 +6,6 @@ import authReducer from '../slice/authSlice';
 import templatesReducer from '../slice/templateSlice';
 import { teamApi } from '../slice/teamApiSlice';
 import { metricsApi } from '../slice/metricsApiSlice';
-// import { detailsApiSlice } from '../slice/detailsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,7 +13,6 @@ export const store = configureStore({
     [dashboardApi.reducerPath]: dashboardApi.reducer,
     [teamApi.reducerPath]: teamApi.reducer,
     [metricsApi.reducerPath]: metricsApi.reducer,
-    // [detailsApiSlice.reducerPath]: detailsApiSlice.reducer,
     auth: authReducer,
     templates: templatesReducer,
   },
@@ -24,7 +22,6 @@ export const store = configureStore({
       .concat(dashboardApi.middleware)
       .concat(teamApi.middleware)
       .concat(metricsApi.middleware)
-      // .concat(detailsApiSlice.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

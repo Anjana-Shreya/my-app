@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import {
   useGetHierarchicalTeamQuery,
   useGetTeamAuthorsMutation,
-  useGetBranchesQuery
+  useGetBranchesQuery,
 } from '../slice/teamApiSlice';
 import { selectCurrentUser } from '../slice/authSlice';
 import { addDays } from 'date-fns';
@@ -44,9 +44,9 @@ const Process = () => {
     return stored ? JSON.parse(stored) : [];
   });
 
-  // Selected Repos
-  const [selectedRepos, setSelectedRepos] = useState<string[]>(() => {
-    const stored = localStorage.getItem('selectedRepos');
+  // Selected Branches
+  const [selectedBranches, setSelectedBranches] = useState<string[]>(() => {
+    const stored = localStorage.getItem('selectedBranches');
     return stored ? JSON.parse(stored) : [];
   });
 
@@ -57,12 +57,12 @@ const Process = () => {
   });
 
   // Dropdown states
-  const [openRepos, setOpenRepos] = useState(false);
+  const [openBranches, setOpenBranches] = useState(false);
   const [openTeams, setOpenTeams] = useState(false);
   const [openAuthors, setOpenAuthors] = useState(false);
 
   // Create refs for each dropdown
-  const reposRef = useOutsideClick(() => setOpenRepos(false));
+  const branchesRef = useOutsideClick(() => setOpenBranches(false));
   const teamsRef = useOutsideClick(() => setOpenTeams(false));
   const authorsRef = useOutsideClick(() => setOpenAuthors(false));
 
@@ -113,7 +113,7 @@ const Process = () => {
     23351, 23341, 23316
   ];
 
-  const { data: repos = [], isLoading: isLoadingRepos } = useGetBranchesQuery(
+  const { data: branches = [], isLoading: isLoadingBranches } = useGetBranchesQuery(
     { repoIds },
     { skip: repoIds.length === 0 }
   );
@@ -151,11 +151,11 @@ const Process = () => {
   };
 
   const handleRepoToggle = (repo: string) => {
-    const newSelectedRepos = selectedRepos.includes(repo)
-      ? selectedRepos.filter(r => r !== repo)
-      : [...selectedRepos, repo];
-    setSelectedRepos(newSelectedRepos);
-    localStorage.setItem('selectedRepos', JSON.stringify(newSelectedRepos));
+    const newSelectedBranches = selectedBranches.includes(repo)
+      ? selectedBranches.filter(r => r !== repo)
+      : [...selectedBranches, repo];
+    setSelectedBranches(newSelectedBranches);
+    localStorage.setItem('selectedBranches', JSON.stringify(newSelectedBranches));
   };
 
   const handleSelectAllTeams = () => {
@@ -184,14 +184,14 @@ const Process = () => {
     }
   };
 
-  const handleSelectAllRepos = () => {
-    if (repos) {
-      if (selectedRepos.length === repos.length) {
-        setSelectedRepos([]);
-        localStorage.setItem('selectedRepos', JSON.stringify([]));
+  const handleSelectAllBranches = () => {
+    if (branches) {
+      if (selectedBranches.length === branches.length) {
+        setSelectedBranches([]);
+        localStorage.setItem('selectedBranches', JSON.stringify([]));
       } else {
-        setSelectedRepos([...repos]);
-        localStorage.setItem('selectedRepos', JSON.stringify([...repos]));
+        setSelectedBranches([...branches]);
+        localStorage.setItem('selectedBranches', JSON.stringify([...branches]));
       }
     }
   };
@@ -202,13 +202,13 @@ const Process = () => {
         <h2 className="process-title">Team Authors Report</h2>
 
         <div className="process-topbar" style={{display:"flex", alignItems:"center"}}>
-          {/* Repositories Dropdown with Checkboxes */}
-          <div className="filter-group" ref={reposRef}>
+          {/* Branchesitories Dropdown with Checkboxes */}
+          <div className="filter-group" ref={branchesRef}>
             <div 
               className="dropdown-header" 
               onClick={(e) => {
                 e.stopPropagation();
-                setOpenRepos(!openRepos);
+                setOpenBranches(!openBranches);
               }} 
               style={{display:"flex"}}
             >
@@ -216,29 +216,29 @@ const Process = () => {
                 Select Branches
               </Typography>
               <IconButton size="small">
-                {openRepos ? <ExpandLess /> : <ExpandMore />}
+                {openBranches ? <ExpandLess /> : <ExpandMore />}
               </IconButton>
             </div>
-            <Collapse in={openRepos}>
+            <Collapse in={openBranches}>
               <Box className="checkbox-group-container">
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={repos && selectedRepos.length === repos.length}
-                      indeterminate={repos && selectedRepos.length > 0 && selectedRepos.length < repos.length}
-                      onChange={handleSelectAllRepos}
+                      checked={branches && selectedBranches.length === branches.length}
+                      indeterminate={branches && selectedBranches.length > 0 && selectedBranches.length < branches.length}
+                      onChange={handleSelectAllBranches}
                       color="primary"
                     />
                   }
                   label="Select all"
                 />
                 <FormGroup className="checkbox-group">
-                  {repos.map(repo => (
+                  {branches.map(repo => (
                     <FormControlLabel
                       key={repo}
                       control={
                         <Checkbox
-                          checked={selectedRepos.includes(repo)}
+                          checked={selectedBranches.includes(repo)}
                           onChange={() => handleRepoToggle(repo)}
                           color="primary"
                         />
