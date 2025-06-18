@@ -5,15 +5,7 @@ import {
   Typography, 
   Button, 
   Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow,
   CircularProgress,
-  Tabs,
-  Tab,
 } from '@mui/material';
 import { useGetTeamMetricsQuery } from '../slice/dashboardApiSlice';
 import Highcharts from 'highcharts';

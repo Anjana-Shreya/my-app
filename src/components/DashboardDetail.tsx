@@ -1,5 +1,5 @@
 // src/components/DashboardDetail.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useGetHierarchicalTeamQuery } from '../slice/teamApiSlice';
@@ -29,6 +29,25 @@ interface DashboardData {
   isFavorite?: boolean;
 }
 
+const useOutsideClick = (callback: () => void) => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        callback();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [callback]);
+
+  return ref;
+};
+
 const DashboardDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -43,6 +62,8 @@ const DashboardDetail = () => {
   const user = useSelector(selectCurrentUser);
   const userId = user?.id;
   const orgId = user?.organization?.id;
+  
+  const teamsRef = useOutsideClick(() => setOpenTeams(false));
 
   const [dateRange, setDateRange] = useState<[Date, Date]>(() => {
     const storedStart = localStorage.getItem('startDate2');
@@ -241,53 +262,52 @@ const DashboardDetail = () => {
                 {openTeams ? <ExpandLess /> : <ExpandMore />}
               </IconButton>
             </div>
-
             <Collapse in={openTeams}>
-              <Paper className="teams-dropdown-content">
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={selectedTeams.length === teams.length}
-                      indeterminate={selectedTeams.length > 0 && selectedTeams.length < teams.length}
-                      onChange={handleSelectAllTeams}
-                    />
-                  }
-                  label="Select all"
-                />
-                <FormGroup className="teams-list">
-                  {teams.map((team, index) => {
-                    const color = fixedColors[team.id % fixedColors.length]; 
-                    return (
-                      <FormControlLabel
-                        key={team.id}
-                        control={
-                          <Checkbox
-                            checked={selectedTeams.includes(team.id)}
-                            onChange={() => handleTeamToggle(team.id)}
-                          />
-                        }
-                        label={
-                          <div className="team-label">
-                            <div 
-                              className="team-avatar" 
-                              style={{ backgroundColor: color }}
-                            >
-                              {team.name
-                                .split(' ')
-                                .map((word) => word[0])
-                                .join('')
-                                .slice(0, 2)
-                                .toUpperCase()}
-                            </div>
-                            <span className="team-name">{team.name}</span>
-                          </div>
-                        }
+              <div ref={teamsRef}>
+                <Paper className="teams-dropdown-content">
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={selectedTeams.length === teams.length}
+                        indeterminate={selectedTeams.length > 0 && selectedTeams.length < teams.length}
+                        onChange={handleSelectAllTeams}
                       />
-                    );
-                  })}
-                </FormGroup>
-              </Paper>
+                    }
+                    label="Select all"
+                  />
+                  <FormGroup className="teams-list">
+                    {teams.map((team) => {
+                      const color = fixedColors[team.id % fixedColors.length];
+                      return (
+                        <FormControlLabel
+                          key={team.id}
+                          control={
+                            <Checkbox
+                              checked={selectedTeams.includes(team.id)}
+                              onChange={() => handleTeamToggle(team.id)}
+                            />
+                          }
+                          label={
+                            <div className="team-label">
+                              <div className="team-avatar" style={{ backgroundColor: color }}>
+                                {team.name
+                                  .split(' ')
+                                  .map((word) => word[0])
+                                  .join('')
+                                  .slice(0, 2)
+                                  .toUpperCase()}
+                              </div>
+                              <span className="team-name">{team.name}</span>
+                            </div>
+                          }
+                        />
+                      );
+                    })}
+                  </FormGroup>
+                </Paper>
+              </div>
             </Collapse>
+
           </div>
         </div>
 

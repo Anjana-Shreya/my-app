@@ -139,6 +139,17 @@ export const dashboardApi = createApi({
         body: { metricType, teamIds }
       }),
       providesTags: ['MetricData']
+    }),
+
+    updateUserPreferences: builder.mutation({
+      query: (payload) => ({
+        url: '/user/update-user-preferences',
+        method: 'PUT',
+        body: payload          
+      }),
+      transformResponse: (response: any) => {
+        return response;
+      }
     })
   }),
 });
@@ -149,5 +160,6 @@ export const {
   useGetMetricGraphDataQuery,
   useGetTeamMetricsQuery,
   useGetMetricDetailsQuery,
-  useGetBenchmarkDataQuery
+  useGetBenchmarkDataQuery,
+  useUpdateUserPreferencesMutation
 } = dashboardApi;

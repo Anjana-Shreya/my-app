@@ -1,150 +1,257 @@
 // src/components/Dashboard.tsx
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setSearchTerm, setSelectedOption, filterTemplates } from '../slice/templateSlice';
-import { dashboardApi } from '../slice/dashboardApiSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import { 
+  setSearchTerm, 
+  setSelectedOption, 
+  filterTemplates 
+} from '../slice/templateSlice';
+import { 
+  useGetOrgTemplatesQuery,
+  useGetUserDashboardsQuery,
+  useUpdateUserPreferencesMutation
+} from '../slice/dashboardApiSlice';
 import './dashboard.css';
 import { DashboardTemplate } from '../types/types';
 
-interface DashboardProps {
-  searchTerm: string;
-  selectedOption: string;
-  filteredTemplates: DashboardTemplate[];
-  auth: any;
-  templatesData: {
-    data?: DashboardTemplate[];
-    isLoading: boolean;
-    error?: any;
-  };
-  dashboardsData: {
-    data?: any[];
-    isLoading: boolean;
-    error?: any;
-  };
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  
+  // Get state from Redux store
+  const searchTerm = useSelector((state: any) => state.templates.searchTerm);
+  const selectedOption = useSelector((state: any) => state.templates.selectedOption);
+  const filteredTemplates = useSelector((state: any) => state.templates.filteredTemplates);
+  const auth = useSelector((state: any) => state.auth);
+  
+  const [favoriteDashboards, setFavoriteDashboards] = useState<Array<{
+    id: number;
+    isTemplate: boolean;
+    dashboardName: string;
+  }>>([]);
 
-  setSearchTerm: (term: string) => void;
-  setSelectedOption: (option: string) => void;
-  filterTemplates: (templates: DashboardTemplate[]) => void;
-  getOrgTemplates: (orgId: number) => void;
-  getOrgDashboards: (params: { orgId: number, userId: number }) => void;
-
-  history: any;
-}
-
-class Dashboard extends Component<DashboardProps> {
-  componentDidMount() {
-    const { auth, getOrgTemplates, getOrgDashboards } = this.props;
-    const orgId = auth?.user?.organization?.id;
-    const userId = auth?.user?.id;
-    
-    
-    if (orgId) {
-      getOrgTemplates(orgId);
-      if (userId) {
-        getOrgDashboards({ orgId, userId });
-      }
+  // API queries
+  const {
+    data: templatesData,
+    isLoading: templatesLoading,
+    error: templatesError,
+    refetch: refetchTemplates
+  } = useGetOrgTemplatesQuery(auth?.user?.organization?.id, {
+    skip: !auth?.user?.organization?.id
+  });
+  
+  const {
+    data: dashboardsData,
+    isLoading: dashboardsLoading,
+    error: dashboardsError,
+    refetch: refetchDashboards
+  } = useGetUserDashboardsQuery(
+    { 
+      orgId: auth?.user?.organization?.id, 
+      userId: auth?.user?.id 
+    },
+    { 
+      skip: !auth?.user?.organization?.id || !auth?.user?.id 
     }
-  }
+  );
+  
+  const [updateUserPreferences] = useUpdateUserPreferencesMutation();
 
-// In your Dashboard.tsx component
-handleTemplateClick = (item: any) => {
-  const savedDashboards = JSON.parse(localStorage.getItem('dashboards') || '[]');
-  const parsedDashboards = Array.isArray(savedDashboards) ? savedDashboards : [];
-  
-  // Update or add the current dashboard
-  const existingIndex = parsedDashboards.findIndex(d => d.id === item.id);
-  if (existingIndex >= 0) {
-    parsedDashboards[existingIndex] = item;
-  } else {
-    parsedDashboards.push(item);
-  }
-  
-  localStorage.setItem('dashboards', JSON.stringify(parsedDashboards));
-  
-  this.props.history.push(`/dashboard/${item.id}`);
-};
+  // Handle template click
+  const handleTemplateClick = useCallback((item: any) => {
+    const savedDashboards = JSON.parse(localStorage.getItem('dashboards') || '[]');
+    const parsedDashboards = Array.isArray(savedDashboards) ? savedDashboards : [];
+    
+    const existingIndex = parsedDashboards.findIndex(d => d.id === item.id);
+    if (existingIndex >= 0) {
+      parsedDashboards[existingIndex] = item;
+    } else {
+      parsedDashboards.push(item);
+    }
+    
+    localStorage.setItem('dashboards', JSON.stringify(parsedDashboards));
+    navigate(`/dashboard/${item.id}`);
+  }, [navigate]);
 
-  handleToggleFavorite = (e: React.MouseEvent, item: any) => {
+  // Load favorite dashboards on mount
+  useEffect(() => {
+    const loadFavoriteDashboards = () => {
+      try {
+        const favorites = JSON.parse(localStorage.getItem('dashboardFavorites') || '{}');
+        const favoriteItems = Object.keys(favorites)
+          .filter(key => favorites[key])
+          .map(key => {
+            const id = parseInt(key);
+            const allItems = [
+              ...(templatesData || []),
+              ...(dashboardsData || [])
+            ];
+            const item = allItems.find(item => item.id === id);
+            return item ? {
+              id: item.id,
+              isTemplate: item.isTemplate || false,
+              dashboardName: item.templateName || item.dashboardName || item.name || 'Untitled'
+            } : null;
+          })
+          .filter(Boolean);
+        
+        setFavoriteDashboards(favoriteItems as any);
+      } catch (error) {
+        console.error('Error loading favorite dashboards:', error);
+      }
+    };
+
+    if (templatesData || dashboardsData) {
+      loadFavoriteDashboards();
+    }
+  }, [templatesData, dashboardsData]);
+
+  // Handle toggle favorite
+  const handleToggleFavorite = useCallback(async (e: React.MouseEvent, item: any) => {
     e.stopPropagation();
     
     try {
       const favorites = JSON.parse(localStorage.getItem('dashboardFavorites') || '{}');
-      const parsedFavorites = typeof favorites === 'string' ? JSON.parse(favorites) : favorites;
+      const newFavoriteStatus = !favorites[item.id];
       
-      const newFavoriteStatus = !parsedFavorites[item.id];
-      parsedFavorites[item.id] = newFavoriteStatus;
+      // Update local storage
+      favorites[item.id] = newFavoriteStatus;
+      localStorage.setItem('dashboardFavorites', JSON.stringify(favorites));
       
-      localStorage.setItem('dashboardFavorites', JSON.stringify(parsedFavorites));
-      
-      const updatedItems = this.props.filteredTemplates.map(d => 
+      // Update UI
+      const updatedItems = filteredTemplates.map((d: any) => 
         d.id === item.id ? { ...d, isFavorite: newFavoriteStatus } : d
       );
+      dispatch(filterTemplates(updatedItems));
       
-      this.props.filterTemplates(updatedItems);
+      // Update favoriteDashboards state
+      setFavoriteDashboards(prev => {
+        if (newFavoriteStatus) {
+          return [
+            ...prev.filter(fav => fav.id !== item.id),
+            {
+              id: item.id,
+              isTemplate: item.isTemplate || false,
+              dashboardName: item.templateName || item.dashboardName || item.name || 'Untitled'
+            }
+          ];
+        } else {
+          return prev.filter(fav => fav.id !== item.id);
+        }
+      });
+      
+      // Prepare payload for API
+      const updatedFavorites = newFavoriteStatus
+        ? [
+            ...favoriteDashboards.filter(fav => fav.id !== item.id),
+            {
+              id: item.id,
+              isTemplate: item.isTemplate || false,
+              dashboardName: item.templateName || item.dashboardName || item.name || 'Untitled'
+            }
+          ]
+        : favoriteDashboards.filter(fav => fav.id !== item.id);
+      
+      // Call API to update preferences
+      await updateUserPreferences({
+        userId: auth?.user?.id,
+        type: "UPDATE_DASHBOARDS",
+        organizationId: auth?.user?.organization?.id,
+        favouriteDashboards: JSON.stringify(updatedFavorites)
+      }).unwrap();
+      
     } catch (error) {
       console.error('Error updating favorites:', error);
     }
-  };
+  }, [auth, dispatch, filteredTemplates, favoriteDashboards, updateUserPreferences]);
 
-  componentDidUpdate(prevProps: DashboardProps) {
-    const { templatesData, dashboardsData, filterTemplates, searchTerm, selectedOption } = this.props;
+  // Handle retry
+  const handleRetry = useCallback(() => {
+    if (auth?.user?.organization?.id) {
+      refetchTemplates();
+      if (auth?.user?.id) {
+        refetchDashboards();
+      }
+    }
+  }, [auth, refetchTemplates, refetchDashboards]);
 
-    const templatesChanged = templatesData.data !== prevProps.templatesData.data;
-    const dashboardsChanged = dashboardsData.data !== prevProps.dashboardsData.data;
-    const searchChanged = searchTerm !== prevProps.searchTerm;
-    const optionChanged = selectedOption !== prevProps.selectedOption;
+  // Filter and sort templates/dashboards
+  useEffect(() => {
+    if (!templatesData && !dashboardsData) return;
 
-    const shouldUpdate = templatesChanged || dashboardsChanged || searchChanged || optionChanged;
-
-    if (!shouldUpdate) return;
-
-    // Get favorites from localStorage
     const favorites = JSON.parse(localStorage.getItem('dashboardFavorites') || '{}');
-
     let filtered: DashboardTemplate[] = [];
 
-    if (selectedOption === 'Templates' && templatesData.data) {
-      filtered = templatesData.data.map(template => ({
+    if (selectedOption === 'Templates' && templatesData) {
+      filtered = templatesData.map(template => ({
         ...template,
         isFavorite: !!favorites[template.id]
       })).filter((template) =>
         template.templateName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    else if (['Public Board', 'Private Boards', 'Favorites'].includes(selectedOption) && dashboardsData.data) {
-      let boardFilter = dashboardsData.data.map(dashboard => ({
-        ...dashboard,
-        isFavorite: !!favorites[dashboard.id]
-      }));
+    else if (selectedOption === 'Public Board' && dashboardsData) {
+      filtered = dashboardsData
+        .map((dashboard: any) => ({
+          ...dashboard,
+          isFavorite: !!favorites[dashboard.id]
+        }))
+        .filter((dashboard: any) => 
+          dashboard.type === 'public' &&
+          (dashboard.dashboardName || dashboard.name || '')
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
+        );
+    }
+    else if (selectedOption === 'Private Boards' && dashboardsData) {
+      filtered = dashboardsData
+        .map((dashboard: any) => ({
+          ...dashboard,
+          isFavorite: !!favorites[dashboard.id]
+        }))
+        .filter((dashboard: any) => 
+          dashboard.type !== 'public' &&
+          (dashboard.dashboardName || dashboard.name || '')
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
+        );
+    }
+    else if (selectedOption === 'Favorites') {
+      const favoriteIds = favoriteDashboards.map(fav => fav.id);
+      const allItems = [
+        ...(templatesData?.map((template: any) => ({
+          ...template,
+          isFavorite: !!favorites[template.id],
+          isTemplate: true
+        })) || []),
+        ...(dashboardsData?.map((dashboard: any) => ({
+          ...dashboard,
+          isFavorite: !!favorites[dashboard.id],
+          isTemplate: false
+        })) || [])
+      ];
 
-      if (selectedOption === 'Public Board') {
-        boardFilter = boardFilter.filter((dashboard: any) => dashboard.type === 'public');
-      } else if (selectedOption === 'Private Boards') {
-        boardFilter = boardFilter.filter((dashboard: any) => dashboard.type !== 'public'); 
-      } else if (selectedOption === 'Favorites') {
-        boardFilter = boardFilter.filter((dashboard: any) => dashboard.isFavorite === true);
-      }
-
-      filtered = boardFilter.filter((dashboard: any) =>
-        (dashboard.dashboardName || dashboard.name || '')
+      filtered = allItems.filter(item => 
+        favoriteIds.includes(item.id) &&
+        (item.templateName || item.dashboardName || item.name || '')
           .toLowerCase()
           .includes(searchTerm.toLowerCase())
       );
     }
     else if (selectedOption === 'All Boards') {
       const all = [
-        ...(templatesData.data?.map(template => ({
+        ...(templatesData?.map((template: any) => ({
           ...template,
           isFavorite: !!favorites[template.id]
         })) || []),
-        ...(dashboardsData.data?.map(dashboard => ({
+        ...(dashboardsData?.map((dashboard: any) => ({
           ...dashboard,
           isFavorite: !!favorites[dashboard.id]
         })) || [])
       ];
 
-      filtered = all.filter((item) =>
+      filtered = all.filter((item: any) =>
         (item.templateName || item.dashboardName || item.name || '')
           .toLowerCase()
           .includes(searchTerm.toLowerCase())
@@ -160,158 +267,107 @@ handleTemplateClick = (item: any) => {
       });
     }
 
-    filterTemplates(filtered);
-  }
+    dispatch(filterTemplates(filtered));
+  }, [templatesData, dashboardsData, searchTerm, selectedOption, dispatch, favoriteDashboards]);
 
-  handleRetry = () => {
-    const { auth, getOrgTemplates, getOrgDashboards } = this.props;
-    const orgId = auth?.user?.organization?.id;
-    const userId = auth?.user?.id;
-    
-    if (orgId) {
-      getOrgTemplates(orgId);
-      if (userId) {
-        getOrgDashboards({ orgId, userId });
-      }
-    }
-  };
+  const isLoading = templatesLoading || dashboardsLoading;
+  const error = templatesError || dashboardsError;
+  const allItems = filteredTemplates || [];
 
-  render() {
-    const {
-      searchTerm,
-      selectedOption,
-      filteredTemplates,
-      templatesData,
-      dashboardsData,
-      setSearchTerm,
-      setSelectedOption
-    } = this.props;
+  return (
+    <div className="dashboard-container">
+      <div className="main-content">
+        <h1 className="dashboard-title">Dashboard</h1>
 
-    const allItems = filteredTemplates || [];
-    const isLoading = templatesData.isLoading || dashboardsData.isLoading;
-    const error = templatesData.error || dashboardsData.error;
+        <div className="controls">
+          <input
+            type="text"
+            placeholder="Search boards..."
+            value={searchTerm}
+            onChange={(e) => dispatch(setSearchTerm(e.target.value))}
+            className="search-input"
+          />
 
-    return (
-      <div className="dashboard-container">
-        <div className="main-content">
-          <h1 className="dashboard-title">Dashboard</h1>
+          <select
+            value={selectedOption}
+            onChange={(e) => dispatch(setSelectedOption(e.target.value))}
+            className="dropdown"
+          >
+            <option>All Boards</option>
+            <option>Private Boards</option>
+            <option>Favorites</option>
+            <option>Public Board</option>
+            <option>Templates</option>
+          </select>
+        </div>
 
-          <div className="controls">
-            <input
-              type="text"
-              placeholder="Search boards..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-
-            <select
-              value={selectedOption}
-              onChange={(e) => setSelectedOption(e.target.value)}
-              className="dropdown"
-            >
-              <option>All Boards</option>
-              <option>Private Boards</option>
-              <option>Favorites</option>
-              <option>Public Board</option>
-              <option>Templates</option>
-            </select>
+        {isLoading && <p className="status-text">Loading data...</p>}
+        
+        {error && (
+          <div className="status-text error-text">
+            Error loading data
+            <button onClick={handleRetry} className="retry-button">
+              Retry
+            </button>
           </div>
+        )}
 
-          {isLoading && <p className="status-text">Loading data...</p>}
-          
-          {error && (
-            <div className="status-text error-text">
-              Error loading data
-              <button onClick={this.handleRetry} className="retry-button">
-                Retry
-              </button>
-            </div>
-          )}
-
-          <div className="template-list">
-            {allItems.length > 0 ? (
-              allItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="template-row"
-                  onClick={() => this.handleTemplateClick(item)}
-                  style={{ cursor: 'pointer' }}
-                > 
-                  <div className="left-section">
-                    <div className="template-icon">▦</div>
-                    <div className="template-info">
-                      <div className="template-name">
-                        {item.templateName || item.dashboardName || item.name || 'Untitled'}
-                      </div>
-                      <div className="template-description">
-                        {item.description || ''}
-                      </div>
+        <div className="template-list">
+          {allItems.length > 0 ? (
+            allItems.map((item: any) => (
+              <div 
+                key={item.id} 
+                className="template-row"
+                onClick={() => handleTemplateClick(item)}
+                style={{ cursor: 'pointer' }}
+              > 
+                <div className="left-section">
+                  <div className="template-icon">▦</div>
+                  <div className="template-info">
+                    <div className="template-name">
+                      {item.templateName || item.dashboardName || item.name || 'Untitled'}
+                    </div>
+                    <div className="template-description">
+                      {item.description || ''}
                     </div>
                   </div>
-                  <div className="middle-section">
-                    {(Array.isArray(item.metricsList || item.widgets || item.metrics) 
-                      ? (item.metricsList || item.widgets || item.metrics) 
-                      : []).slice(0, 3).map((metric: any, index: number) => (
-                      <span key={metric?.id || index} className="metric-pill">
-                        {metric?.metricName || metric?.widgetType || metric?.name || 'Metric'}
-                      </span>
-                    ))}
-                    {Array.isArray(item.metricsList || item.widgets || item.metrics) && 
-                    (item.metricsList || item.widgets || item.metrics).length > 3 && (
-                      <span className="metric-pill">
-                        +{(item.metricsList || item.widgets || item.metrics).length - 3}
-                      </span>
-                    )}
-                  </div>
-                  <div className="right-section">
-                    <span 
-                      className={`icon-btn ${item.isFavorite ? 'favorite-active' : ''}`}
-                      onClick={(e) => this.handleToggleFavorite(e, item)}
-                    >
-                      {item.isFavorite ? '★' : '☆'}
-                    </span>
-                  </div>
                 </div>
-              ))
-            ) : (
-              <div className="no-data-card">
-                {!isLoading && templatesData.data?.length === 0 && dashboardsData.data?.length === 0
-                  ? 'No data found'
-                  : 'No matching items found'}
+                <div className="middle-section">
+                  {(Array.isArray(item.metricsList || item.widgets || item.metrics) 
+                    ? (item.metricsList || item.widgets || item.metrics) 
+                    : []).slice(0, 3).map((metric: any, index: number) => (
+                    <span key={metric?.id || index} className="metric-pill">
+                      {metric?.metricName || metric?.widgetType || metric?.name || 'Metric'}
+                    </span>
+                  ))}
+                  {Array.isArray(item.metricsList || item.widgets || item.metrics) && 
+                  (item.metricsList || item.widgets || item.metrics).length > 3 && (
+                    <span className="metric-pill">
+                      +{(item.metricsList || item.widgets || item.metrics).length - 3}
+                    </span>
+                  )}
+                </div>
+                <div className="right-section">
+                  <span 
+                    className={`icon-btn ${item.isFavorite ? 'favorite-active' : ''}`}
+                    onClick={(e) => handleToggleFavorite(e, item)}
+                  >
+                    {item.isFavorite ? '★' : '☆'}
+                  </span>
+                </div>
               </div>
-            )}
-          </div>
+            ))
+          ) : (
+            <div className="no-data-card">
+              {!isLoading && templatesData?.length === 0 && dashboardsData?.length === 0
+                ? 'No data found'
+                : 'No matching items found'}
+            </div>
+          )}
         </div>
       </div>
-    );
-  }
-}
-
-const mapStateToProps = (state: any) => ({
-  searchTerm: state.templates.searchTerm,
-  selectedOption: state.templates.selectedOption,
-  filteredTemplates: state.templates.filteredTemplates,
-  auth: state.auth,
-  templatesData: dashboardApi.endpoints.getOrgTemplates.select(state.auth?.user?.organization?.id)(state),
-  dashboardsData: dashboardApi.endpoints.getUserDashboards.select({
-    orgId: state.auth?.user?.organization?.id,
-    userId: state.auth?.user?.id
-  })(state)
-});
-
-const mapDispatchToProps = {
-  setSearchTerm,
-  setSelectedOption,
-  filterTemplates,
-  getOrgTemplates: dashboardApi.endpoints.getOrgTemplates.initiate,
-  getOrgDashboards: dashboardApi.endpoints.getUserDashboards.initiate
+    </div>
+  );
 };
 
-const DashboardWithRouter = (props: any) => {
-  const navigate = useNavigate();
-  return <ConnectedDashboard {...props} history={{ push: navigate }} />;
-};
-
-const ConnectedDashboard = connect(mapStateToProps, mapDispatchToProps)(Dashboard);
-export default DashboardWithRouter;
+export default Dashboard;
